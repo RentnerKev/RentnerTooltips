@@ -1,0 +1,7 @@
+[install]
+minimumReleaseAge = 86400
+linker = "isolated"
+globalStore = false
+[test]
+root = "src/test"
+pathIgnorePatterns = ["**/*.db.test.ts"]
