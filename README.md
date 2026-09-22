@@ -71,13 +71,18 @@ export function StyledExample() {
 
 ## Styling
 
-The package does not ship a CSS file. The default design uses Tailwind CSS
-class names. With Tailwind CSS v4, add the package files as a source:
+The package ships an opt-in Tailwind entry. Import it after Tailwind CSS in your
+main stylesheet:
 
 ```css
 @import 'tailwindcss';
-@source '../node_modules/@rentnerkev/tooltips';
+@import '@rentnerkev/tooltips/tailwind.css';
 ```
+
+The entry scans only the published JavaScript files under `dist`. It provides
+the shared `primary`, `primary-hover`, `background-dark`, `surface-dark`,
+`input-dark`, `border-dark`, `secondary-text`, and `muted-foreground` theme
+tokens. Override them with a later `@theme` block when needed.
 
 If you do not use Tailwind, override the design classes through `customDesign`
 with classes from your own stylesheet.
