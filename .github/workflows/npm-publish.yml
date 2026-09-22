@@ -54,6 +54,9 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
+            - name: Install Playwright browser
+              run: bunx playwright install --with-deps chromium
+
             - name: Verify package name
               shell: bash
               run: |
@@ -69,30 +72,10 @@ jobs:
             - name: Set package version from release tag
               env:
                   PACKAGE_VERSION: ${{ steps.release.outputs.version }}
-              run: npm version "$PACKAGE_VERSION" --no-git-tag-version --ignore-scripts
+              run: npm version "$PACKAGE_VERSION" --allow-same-version --no-git-tag-version --ignore-scripts
 
-            - name: Typecheck
-              run: bun run typecheck
-
-            - name: Lint
-              run: bun run lint
-
-            - name: Format check
-              run: bun run format:check
-
-            - name: Run tests when available
-              shell: bash
-              run: |
-                  set -euo pipefail
-
-                  if node -e "const p = require('./package.json'); process.exit(p.scripts?.test ? 0 : 1)"; then
-                    bun run test
-                  else
-                    echo "No test script configured; skipping tests."
-                  fi
-
-            - name: Build
-              run: bun run build
+            - name: Run production checks
+              run: bun run verify
 
             - name: Inspect npm package contents
               run: npm pack --dry-run

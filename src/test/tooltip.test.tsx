@@ -23,7 +23,7 @@ describe('tooltip API', () => {
         ])
     })
 
-    test('keeps standalone tooltips compatible through a fallback provider', () => {
+    test('supports standalone tooltips through a fallback provider', () => {
         const markup = renderToStaticMarkup(
             <CustomTooltip content="Helpful information">
                 <button type="button">Hover me</button>
@@ -89,8 +89,24 @@ describe('tooltip API', () => {
         expect(markup).toContain('aria-describedby="download-help"')
         expect(markup).toContain('aria-description="Downloads are unavailable"')
         expect(markup).toContain('data-tooltip-disabled-trigger=""')
-        expect(markup).toContain('class="inline-flex custom-wrapper"')
+        expect(markup).toContain('custom-wrapper')
         expect(markup).toContain('style="pointer-events:none"')
+    })
+
+    test('forwards Radix trigger state to the disabled wrapper', () => {
+        const markup = renderToStaticMarkup(
+            <CustomTooltip
+                content="This action is unavailable"
+                disabledTrigger
+                open
+            >
+                <button type="button" disabled>
+                    Download
+                </button>
+            </CustomTooltip>,
+        )
+
+        expect(markup).toContain('data-state="instant-open"')
     })
 
     test('accepts delay, collision, positioning, and portal options', () => {

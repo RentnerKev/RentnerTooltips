@@ -10,7 +10,7 @@ import { usePlaygroundLogic } from './Hooks/usePlaygroundLogic.js'
 const playgroundDesign: TooltipCustomDesign = {
     baseClasses:
         'max-w-[250px] border border-bench-orange bg-bench-ink px-3 py-2.5 text-white shadow-[4px_4px_0_rgba(23,107,135,0.3)] dark:bg-bench-paper dark:text-bench-ink',
-    animationClasses: 'tooltip-open-motion motion-reduce:animate-none',
+    animationClasses: 'tooltip-open-motion motion-reduce:!animate-none',
     contentClasses: 'text-[0.72rem] leading-[1.45]',
     arrowClasses: 'fill-bench-ink dark:fill-bench-paper',
 }
@@ -331,6 +331,7 @@ export function App() {
                                             customDesign={playgroundDesign}
                                         >
                                             <button
+                                                data-testid="provider-trigger"
                                                 className="cursor-help border border-bench-ink bg-bench-teal px-4 py-3 font-bold text-white shadow-[5px_5px_0_#f26b38] hover:bg-bench-ink max-[480px]:w-full dark:border-bench-steel dark:hover:bg-[#234257]"
                                                 type="button"
                                             >
@@ -354,6 +355,7 @@ export function App() {
                                             customDesign={playgroundDesign}
                                         >
                                             <button
+                                                data-testid="disabled-trigger"
                                                 className="border border-dashed border-[#8295a1] bg-[#dfe6ea] px-4 py-3 font-bold text-[#647681] max-[480px]:w-full dark:border-[#526a7c] dark:bg-[#203544] dark:text-bench-steel"
                                                 type="button"
                                                 disabled
@@ -389,6 +391,7 @@ export function App() {
                         customDesign={playgroundDesign}
                     >
                         <button
+                            data-testid="standalone-trigger"
                             className="cursor-help border border-bench-ink bg-transparent px-4 py-3 font-bold text-bench-ink hover:bg-bench-ink hover:text-white dark:border-bench-steel dark:text-bench-paper dark:hover:bg-bench-paper dark:hover:text-bench-ink"
                             type="button"
                         >
@@ -397,7 +400,12 @@ export function App() {
                     </CustomTooltip>
                 </div>
 
-                <div id="tooltip-portal-host" ref={setter.setPortalContainer} />
+                <div
+                    id="tooltip-portal-host"
+                    ref={setter.setPortalContainer}
+                    role="region"
+                    aria-label="Tooltip descriptions"
+                />
             </div>
         </div>
     )

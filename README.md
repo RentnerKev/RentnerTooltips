@@ -34,8 +34,8 @@ export function Example() {
 
 Use one `TooltipProvider` around a section that contains multiple tooltips. A
 `CustomTooltip` inside that provider reuses it instead of creating another
-Radix provider. Standalone `CustomTooltip` usage stays backward compatible and
-creates a fallback provider with the existing 200 ms delay.
+Radix provider. Standalone `CustomTooltip` usage creates a fallback provider
+with the default 200 ms delay.
 
 The trigger must be a single React element. For keyboard support, it should be
 focusable, such as a `button` or link. Custom trigger components must forward
@@ -153,7 +153,9 @@ main stylesheet:
 The entry scans only the published JavaScript files under `dist`. It provides
 the shared `primary`, `primary-hover`, `background-dark`, `surface-dark`,
 `input-dark`, `border-dark`, `secondary-text`, and `muted-foreground` theme
-tokens. Override them with a later `@theme` block when needed.
+tokens plus the package's transform/opacity enter animation. The animation
+uses `motion-safe:` and is disabled automatically for reduced-motion users.
+Override the tokens with a later `@theme` block when needed.
 
 If you do not use Tailwind, override the design classes through `customDesign`
 with classes from your own stylesheet.
@@ -174,8 +176,9 @@ bun install --frozen-lockfile
 bun run verify
 ```
 
-`bun run verify` checks types, Oxlint, Oxfmt, the build, and the published
-package contents with `npm pack --dry-run`.
+`bun run verify` checks types, Oxlint, Oxfmt, unit tests, browser tests, the
+build, and the published package contents with `bun pm pack --dry-run`. Install
+the Playwright browser once with `bunx playwright install chromium`.
 
 ### Playground
 

@@ -15,8 +15,8 @@ export interface TooltipCustomDesign {
 
 export const defaultTooltipDesign: Required<TooltipCustomDesign> = {
     baseClasses:
-        'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 rounded-lg border border-border-dark bg-surface-dark px-3 py-1.5 text-xs font-medium text-gray-200 shadow-xl data-[side=bottom]:slide-in-from-top-2',
-    animationClasses: 'animate-in fade-in zoom-in-95',
+        'rounded-lg border border-border-dark bg-surface-dark px-3 py-1.5 text-xs font-medium text-gray-200 shadow-xl',
+    animationClasses: 'motion-safe:animate-tooltip-enter',
     contentClasses: '',
     arrowClasses: 'fill-surface-dark stroke-border-dark',
 }
