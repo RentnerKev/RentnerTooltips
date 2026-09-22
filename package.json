@@ -24,18 +24,22 @@
     "types": "./dist/index.d.ts",
     "type": "module",
     "files": [
-        "dist"
+        "dist",
+        "tailwind.css"
     ],
-    "sideEffects": false,
+    "sideEffects": [
+        "./tailwind.css"
+    ],
     "scripts": {
         "build": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\" && tsc",
         "typecheck": "tsc --noEmit",
+        "test": "bun test",
         "pack:check": "npm pack --dry-run --cache .npm-cache",
         "lint": "oxlint .",
         "lint:fix": "oxlint --fix .",
-        "format": "oxfmt package.json src .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
-        "format:check": "oxfmt --check package.json src .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
-        "verify": "bun run typecheck && bun run lint && bun run format:check && bun run build && bun run pack:check"
+        "format": "oxfmt package.json src tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "format:check": "oxfmt --check package.json src tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "verify": "bun run typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run pack:check"
     },
     "peerDependencies": {
         "react": "^19.3.0",
@@ -57,6 +61,7 @@
             "import": "./dist/index.js",
             "default": "./dist/index.js"
         },
+        "./tailwind.css": "./tailwind.css",
         "./tooltip": {
             "types": "./dist/CustomTooltip.d.ts",
             "import": "./dist/CustomTooltip.js",
