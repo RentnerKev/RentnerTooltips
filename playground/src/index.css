@@ -1,0 +1,129 @@
+@import 'tailwindcss';
+@import '../../tailwind.css';
+@source '../../src/**/*.{ts,tsx}';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-bench-ink: #0f1f2e;
+    --color-bench-paper: #e8eef2;
+    --color-bench-teal: #176b87;
+    --color-bench-orange: #f26b38;
+    --color-bench-steel: #a9b8c2;
+}
+
+@layer base {
+    :root {
+        font-family:
+            Inter,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    [data-tooltip-disabled-trigger]:focus-visible {
+        outline: 3px solid rgb(242 107 56 / 55%);
+        outline-offset: 3px;
+    }
+
+    [data-tooltip-disabled-trigger] {
+        cursor: help;
+    }
+}
+
+.technical-grid {
+    background-image:
+        linear-gradient(rgb(15 31 46 / 4.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(15 31 46 / 4.5%) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+.dark .technical-grid {
+    background-image:
+        linear-gradient(rgb(169 184 194 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(169 184 194 / 5%) 1px, transparent 1px);
+}
+
+.stage-grid {
+    background-image:
+        linear-gradient(rgb(23 107 135 / 8%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(23 107 135 / 8%) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.dark .stage-grid {
+    background-image:
+        linear-gradient(rgb(105 199 223 / 9%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(105 199 223 / 9%) 1px, transparent 1px);
+}
+
+.stage-crosshair::before,
+.stage-crosshair::after {
+    position: absolute;
+    content: '';
+    pointer-events: none;
+}
+
+.stage-crosshair::before {
+    top: 50%;
+    right: 0;
+    left: 0;
+    border-top: 1px dashed rgb(15 31 46 / 20%);
+}
+
+.stage-crosshair::after {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-left: 1px dashed rgb(15 31 46 / 20%);
+}
+
+.dark .stage-crosshair::before,
+.dark .stage-crosshair::after {
+    border-color: rgb(169 184 194 / 25%);
+}
+
+.axis-vertical {
+    writing-mode: vertical-rl;
+}
+
+.tooltip-open-motion[data-state='delayed-open'],
+.tooltip-open-motion[data-state='instant-open'] {
+    animation: tooltip-in 130ms ease-out;
+}
+
+@keyframes tooltip-in {
+    from {
+        opacity: 0;
+        transform: translateY(3px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

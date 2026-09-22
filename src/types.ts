@@ -1,3 +1,9 @@
+import type {
+    TooltipContentProps as RadixTooltipContentProps,
+    TooltipPortalProps as RadixTooltipPortalProps,
+    TooltipProps as RadixTooltipRootProps,
+    TooltipProviderProps as RadixTooltipProviderProps,
+} from '@radix-ui/react-tooltip'
 import type { ReactElement, ReactNode } from 'react'
 
 export interface TooltipCustomDesign {
@@ -15,9 +21,34 @@ export const defaultTooltipDesign: Required<TooltipCustomDesign> = {
     arrowClasses: 'fill-surface-dark stroke-border-dark',
 }
 
+export interface TooltipProviderProps {
+    children: ReactNode
+    delayDuration?: RadixTooltipProviderProps['delayDuration']
+    skipDelayDuration?: RadixTooltipProviderProps['skipDelayDuration']
+    disableHoverableContent?: RadixTooltipProviderProps['disableHoverableContent']
+}
+
 export interface TooltipProps {
     children: ReactElement
     content: ReactNode
-    side?: 'top' | 'right' | 'bottom' | 'left'
+    disabled?: boolean
+    disabledTrigger?: boolean
+    disabledTriggerClassName?: string
+    open?: RadixTooltipRootProps['open']
+    defaultOpen?: RadixTooltipRootProps['defaultOpen']
+    onOpenChange?: RadixTooltipRootProps['onOpenChange']
+    delayDuration?: RadixTooltipRootProps['delayDuration']
+    disableHoverableContent?: RadixTooltipRootProps['disableHoverableContent']
+    side?: RadixTooltipContentProps['side']
+    sideOffset?: RadixTooltipContentProps['sideOffset']
+    align?: RadixTooltipContentProps['align']
+    alignOffset?: RadixTooltipContentProps['alignOffset']
+    avoidCollisions?: RadixTooltipContentProps['avoidCollisions']
+    collisionBoundary?: RadixTooltipContentProps['collisionBoundary']
+    collisionPadding?: RadixTooltipContentProps['collisionPadding']
+    arrowPadding?: RadixTooltipContentProps['arrowPadding']
+    sticky?: RadixTooltipContentProps['sticky']
+    hideWhenDetached?: RadixTooltipContentProps['hideWhenDetached']
+    portalContainer?: RadixTooltipPortalProps['container']
     customDesign?: TooltipCustomDesign
 }

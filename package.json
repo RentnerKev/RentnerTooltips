@@ -35,11 +35,15 @@
         "typecheck": "tsc --noEmit",
         "test": "bun test",
         "pack:check": "npm pack --dry-run --cache .npm-cache",
+        "playground:install": "bun install --cwd playground --frozen-lockfile",
+        "playground:dev": "bun --cwd playground dev",
+        "playground:typecheck": "bunx --bun tsc --noEmit -p playground/tsconfig.json",
+        "playground:build": "bun --cwd playground build",
         "lint": "oxlint .",
         "lint:fix": "oxlint --fix .",
-        "format": "oxfmt package.json src tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
-        "format:check": "oxfmt --check package.json src tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
-        "verify": "bun run typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run pack:check"
+        "format": "oxfmt package.json src playground tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "format:check": "oxfmt --check package.json src playground tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "verify": "bun run playground:install && bun run typecheck && bun run playground:typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run playground:build && bun run pack:check"
     },
     "peerDependencies": {
         "react": "^19.3.0",
