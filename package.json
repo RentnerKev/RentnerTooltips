@@ -46,8 +46,8 @@
         "verify": "bun run playground:install && bun run typecheck && bun run playground:typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run playground:build && bun run pack:check"
     },
     "peerDependencies": {
-        "react": "^19.3.0",
-        "react-dom": "^19.3.0"
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
     },
     "dependencies": {
         "@radix-ui/react-tooltip": "^1.2.16"
@@ -55,9 +55,11 @@
     "devDependencies": {
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
-        "typescript": "^7.0.2",
         "oxfmt": "^0.68.0",
-        "oxlint": "^1.82.0"
+        "oxlint": "^1.82.0",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "typescript": "^7.0.2"
     },
     "exports": {
         ".": {
