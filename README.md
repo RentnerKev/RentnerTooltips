@@ -4,6 +4,19 @@ A lightweight, customizable React tooltip component built on Radix UI. The
 package provides a shared provider, trigger, portal, collision handling, and
 the accessible tooltip relationship. Standalone tooltips remain supported.
 
+## Requirements
+
+Use React 19 with React DOM 19, an ESM-capable build, and Tailwind CSS 4 for
+the documented styling. Import this package's `tailwind.css` entry into your
+Tailwind stylesheet. It uses `@source` for published classes and `@theme` for
+global tokens such as `--color-primary`. Check for token name collisions with
+your app and override them in a later `@theme` block if needed.
+
+In a React Server Components app, import and render the tooltip provider and
+tooltips from a module beginning with `'use client'`. See the
+[Tailwind directives](https://tailwindcss.com/docs/functions-and-directives)
+and [React client boundary](https://react.dev/reference/rsc/use-client) guides.
+
 ## Installation
 
 ```bash
