@@ -110,10 +110,15 @@ The disabled wrapper exposes a disabled button for button triggers, and a
 labelled group for other native controls. The original control keeps its
 native disabled semantics. Child `aria-label` and `aria-labelledby` values
 also label the focusable wrapper. Native `<label htmlFor>` and enclosing
-labels are preserved in the browser; a stable label ID is assigned while
-the wrapper is mounted if the label has none. Changes to the label text
-remain reflected in its accessible name. For labels provided outside the
-native HTML label mechanism, pass `aria-labelledby` on the child.
+labels are preserved in the browser. When native labels provide the wrapper's
+name, it follows its current native control and updates when associated labels
+are inserted, removed, reassociated, reordered, or when the control is
+replaced. Labels without an ID receive unique generated IDs while they are
+associated; those IDs remain stable through reordering and are removed when
+the labels are no longer associated or the wrapper unmounts. Existing label
+IDs are left intact. Changes to label text remain reflected in the accessible
+name. For labels provided outside the native HTML label mechanism, pass
+`aria-labelledby` on the child.
 
 ### `TooltipProvider`
 

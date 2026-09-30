@@ -28,4 +28,23 @@ export async function check({ page, expect }) {
     await proxy.click({ force: true })
     await expect(page.getByTestId('activations')).toHaveText('0')
     await page.keyboard.press('Escape')
+
+    const amountWrapper = page
+        .locator('[data-tooltip-disabled-trigger]')
+        .filter({ has: page.locator('#consumer-amount') })
+    await page.getByRole('button', { name: 'Add amount label' }).click()
+    await expect(amountWrapper).toHaveAccessibleName('Prefix Amount')
+    const ids = await page
+        .locator('label[for="consumer-amount"]')
+        .evaluateAll((labels) => labels.map((label) => label.id))
+    expect(ids.every(Boolean)).toBe(true)
+    expect(new Set(ids).size).toBe(ids.length)
+    await page.getByRole('button', { name: 'Remount amount control' }).click()
+    await expect(amountWrapper).toHaveAccessibleName('Prefix Amount')
+    await expect(page.locator('#consumer-amount')).toBeDisabled()
+    await amountWrapper.focus()
+    await expect(amountWrapper).toBeFocused()
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Remove amount label' }).click()
+    await expect(amountWrapper).toHaveAccessibleName('Amount')
 }

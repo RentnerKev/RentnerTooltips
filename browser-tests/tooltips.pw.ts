@@ -141,15 +141,118 @@ test.describe('tooltip playground', () => {
         })
         await expect(amountWrapper).toHaveAccessibleName('Replacement amount')
         await page.locator('label[for="disabled-amount"]').evaluate((label) => {
-            label.htmlFor = 'disabled-notes'
+            const associatedLabel = label as HTMLLabelElement
+            associatedLabel.htmlFor = 'disabled-notes'
             const replacement = document.createElement('label')
             replacement.htmlFor = 'disabled-amount'
             replacement.textContent = 'Final amount'
-            label.after(replacement)
+            associatedLabel.after(replacement)
         })
         await expect(amountWrapper).toHaveAccessibleName('Final amount')
         const results = await new AxeBuilder({ page })
             .include('section[aria-label="Unavailable fields"]')
+            .analyze()
+        expect(results.violations).toEqual([])
+    })
+
+    test('tracks unique native labels as labels and controls change', async ({
+        page,
+    }) => {
+        const amountControl = page.locator('#disabled-amount')
+        const amountWrapper = page
+            .locator('[data-tooltip-disabled-trigger]')
+            .filter({ has: amountControl })
+
+        await expect(amountWrapper).toHaveAccessibleName('Amount')
+
+        await amountControl.evaluate((element) => {
+            element.replaceWith(element.cloneNode(true))
+        })
+        await expect(amountWrapper).toHaveAccessibleName('Amount')
+
+        await page.evaluate(() => {
+            const amountLabel = document.querySelector(
+                'label[for="disabled-amount"]',
+            )!
+            const suppliedLabel = document.createElement('label')
+            suppliedLabel.id = 'consumer-amount-label'
+            suppliedLabel.htmlFor = 'disabled-amount'
+            suppliedLabel.textContent = 'Consumer label'
+            amountLabel.before(suppliedLabel)
+
+            const generatedLabel = document.createElement('label')
+            generatedLabel.htmlFor = 'disabled-amount'
+            generatedLabel.textContent = 'Generated label'
+            generatedLabel.dataset.testid = 'generated-amount-label'
+            suppliedLabel.before(generatedLabel)
+        })
+
+        await expect(amountWrapper).toHaveAccessibleName(
+            'Generated label Consumer label Amount',
+        )
+        const labelIds = await page
+            .locator('label[for="disabled-amount"]')
+            .evaluateAll((labels) => labels.map((label) => label.id))
+        expect(labelIds.every(Boolean)).toBe(true)
+        expect(new Set(labelIds).size).toBe(labelIds.length)
+        expect(labelIds).toContain('consumer-amount-label')
+
+        const generatedLabel = await page
+            .locator('[data-testid="generated-amount-label"]')
+            .elementHandle()
+        expect(generatedLabel).not.toBeNull()
+        const generatedId = await generatedLabel!.getAttribute('id')
+        expect(generatedId).toBeTruthy()
+
+        await page.evaluate(() => {
+            const insertedLabel = document.querySelector(
+                '[data-testid="generated-amount-label"]',
+            )!
+            const amountLabel = Array.from(
+                document.querySelectorAll('label[for="disabled-amount"]'),
+            ).find((label) => label.textContent?.trim() === 'Amount')!
+            amountLabel.after(insertedLabel)
+        })
+        await expect(amountWrapper).toHaveAccessibleName(
+            'Consumer label Amount Generated label',
+        )
+        await expect(
+            page.locator('[data-testid="generated-amount-label"]'),
+        ).toHaveAttribute('id', generatedId!)
+
+        await generatedLabel!.evaluate((label) => label.remove())
+        await expect(amountWrapper).toHaveAccessibleName(
+            'Consumer label Amount',
+        )
+        await expect
+            .poll(() => generatedLabel!.evaluate((label) => label.id))
+            .toBe('')
+
+        const suppliedLabel = await page
+            .locator('#consumer-amount-label')
+            .elementHandle()
+        expect(suppliedLabel).not.toBeNull()
+        await suppliedLabel!.evaluate((label) => label.remove())
+        await expect(amountWrapper).toHaveAccessibleName('Amount')
+        await expect
+            .poll(() => suppliedLabel!.evaluate((label) => label.id))
+            .toBe('consumer-amount-label')
+
+        const categoryWrapper = page.getByRole('group', {
+            name: 'Category',
+            exact: true,
+        })
+        await expect(categoryWrapper).toHaveAttribute(
+            'aria-labelledby',
+            'category-label',
+        )
+        await expect(page.locator('#category-label')).toHaveAttribute(
+            'id',
+            'category-label',
+        )
+
+        const results = await new AxeBuilder({ page })
+            .include('[data-tooltip-disabled-trigger]')
             .analyze()
         expect(results.violations).toEqual([])
     })
