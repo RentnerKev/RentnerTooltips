@@ -15,7 +15,7 @@
         "type": "git",
         "url": "git+https://github.com/RentnerKev/RentnerTooltips.git"
     },
-    "homepage": "https://github.com/RentnerKev/RentnerTooltips#readme",
+    "homepage": "https://packages.rentner.dev/packages/tooltips",
     "bugs": {
         "url": "https://github.com/RentnerKev/RentnerTooltips/issues"
     },
