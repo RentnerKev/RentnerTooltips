@@ -55,6 +55,13 @@ focusable, such as a `button` or link. Custom trigger components must forward
 the props and ref provided by Radix. Radix handles hover, focus, touch, and
 ARIA behavior.
 
+Keyboard tooltips stay open while the browser scrolls their focused trigger
+into view. Escape, pointer dismissal, focus leaving the trigger, and opening
+another tooltip keep their normal dismissal behavior.
+
+`disabled` removes the tooltip behavior. Re-enabling an uncontrolled tooltip
+starts from `defaultOpen` again; a controlled tooltip follows its `open` prop.
+
 ## API
 
 ### `CustomTooltip`

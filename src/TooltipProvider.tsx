@@ -5,6 +5,9 @@ import type { TooltipProviderProps } from './types.js'
 const DEFAULT_DELAY_DURATION = 200
 
 export const TooltipProviderDepthContext = createContext(0)
+export const TooltipHoverableContentContext = createContext<
+    boolean | undefined
+>(undefined)
 
 export function TooltipProvider({
     children,
@@ -18,13 +21,17 @@ export function TooltipProvider({
 
     return (
         <TooltipProviderDepthContext.Provider value={providerDepth + 1}>
-            <TooltipPrimitive.Provider
-                delayDuration={delayDuration}
-                skipDelayDuration={skipDelayDuration}
-                disableHoverableContent={disableHoverableContent}
+            <TooltipHoverableContentContext.Provider
+                value={disableHoverableContent}
             >
-                {children}
-            </TooltipPrimitive.Provider>
+                <TooltipPrimitive.Provider
+                    delayDuration={delayDuration}
+                    skipDelayDuration={skipDelayDuration}
+                    disableHoverableContent={disableHoverableContent}
+                >
+                    {children}
+                </TooltipPrimitive.Provider>
+            </TooltipHoverableContentContext.Provider>
         </TooltipProviderDepthContext.Provider>
     )
 }

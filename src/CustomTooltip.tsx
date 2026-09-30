@@ -4,9 +4,11 @@ import { DisabledTooltipTrigger } from './DisabledTooltipTrigger.js'
 import {
     TooltipProvider,
     TooltipProviderDepthContext,
+    TooltipHoverableContentContext,
 } from './TooltipProvider.js'
 import { defaultTooltipDesign } from './types.js'
 import type { TooltipProps } from './types.js'
+import { useTooltipState } from './useTooltipState.js'
 
 export function CustomTooltip({
     children,
@@ -33,7 +35,12 @@ export function CustomTooltip({
     customDesign,
 }: TooltipProps) {
     const providerDepth = useContext(TooltipProviderDepthContext)
+    const inheritedDisableHoverableContent = useContext(
+        TooltipHoverableContentContext,
+    )
     const design = { ...defaultTooltipDesign, ...customDesign }
+    const { isOpen, handleOpenChange, handleFocus, handleDismissal } =
+        useTooltipState({ open, defaultOpen, onOpenChange, disabled })
 
     if (disabled) return children
 
@@ -47,17 +54,32 @@ export function CustomTooltip({
 
     const tooltip = (
         <TooltipPrimitive.Root
-            open={open}
-            defaultOpen={defaultOpen}
-            onOpenChange={onOpenChange}
+            open={isOpen}
+            onOpenChange={handleOpenChange}
             delayDuration={delayDuration}
             disableHoverableContent={disableHoverableContent}
         >
-            <TooltipPrimitive.Trigger asChild>
+            <TooltipPrimitive.Trigger
+                asChild
+                onFocus={handleFocus}
+                onBlur={handleDismissal}
+                onPointerDown={handleDismissal}
+                onClick={handleDismissal}
+                onPointerLeave={(event) => {
+                    if (
+                        disableHoverableContent ??
+                        inheritedDisableHoverableContent
+                    ) {
+                        handleDismissal(event)
+                    }
+                }}
+            >
                 {trigger}
             </TooltipPrimitive.Trigger>
             <TooltipPrimitive.Portal container={portalContainer}>
                 <TooltipPrimitive.Content
+                    onEscapeKeyDown={handleDismissal}
+                    onPointerDownOutside={handleDismissal}
                     side={side}
                     sideOffset={sideOffset}
                     align={align}
