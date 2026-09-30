@@ -467,6 +467,45 @@ export function App() {
                     role="region"
                     aria-label="Tooltip descriptions"
                 />
+                <section
+                    aria-label="Unavailable fields"
+                    className="mx-auto flex max-w-3xl flex-wrap gap-6 p-5"
+                >
+                    <div>
+                        <label htmlFor="disabled-amount">Amount</label>
+                        <CustomTooltip
+                            content="The amount cannot be edited."
+                            disabledTrigger
+                        >
+                            <input id="disabled-amount" defaultValue="12" />
+                        </CustomTooltip>
+                    </div>
+                    <div>
+                        <label htmlFor="disabled-notes">Notes</label>
+                        <CustomTooltip
+                            content="Notes cannot be edited."
+                            disabledTrigger
+                        >
+                            <textarea
+                                id="disabled-notes"
+                                defaultValue="Draft"
+                            />
+                        </CustomTooltip>
+                    </div>
+                    <div>
+                        <label id="category-label" htmlFor="disabled-category">
+                            Category
+                        </label>
+                        <CustomTooltip
+                            content="The category cannot be edited."
+                            disabledTrigger
+                        >
+                            <select id="disabled-category" defaultValue="one">
+                                <option value="one">One</option>
+                            </select>
+                        </CustomTooltip>
+                    </div>
+                </section>
             </div>
         </div>
     )

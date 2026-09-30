@@ -71,7 +71,8 @@ test.describe('tooltip playground', () => {
 
         await page.keyboard.press('Enter')
         await page.keyboard.press(' ')
-        await enabledWrapper.click()
+        // Deliberately attempt a pointer activation on the aria-disabled proxy.
+        await enabledWrapper.click({ force: true })
         await expect(
             page.getByTestId('enabled-trigger-activations'),
         ).toHaveText('0')
@@ -97,6 +98,60 @@ test.describe('tooltip playground', () => {
         await page.keyboard.press('Escape')
         await expect(tooltip).toBeHidden()
         await expect(state).toHaveText('closed')
+    })
+
+    test('preserves native labels on the focusable disabled field wrappers', async ({
+        page,
+    }) => {
+        /* eslint-disable no-await-in-loop -- Focus and Escape are checked in order on the same page. */
+        for (const [name, explanation] of [
+            ['Amount', 'The amount cannot be edited.'],
+            ['Notes', 'Notes cannot be edited.'],
+            ['Category', 'The category cannot be edited.'],
+        ]) {
+            const wrapper = page.getByRole('group', { name, exact: true })
+            await wrapper.focus()
+            await expect(wrapper).toBeFocused()
+            await expect(wrapper).toHaveAccessibleName(name)
+            await expect(wrapper).toHaveAttribute('aria-disabled', 'true')
+            await expect(
+                wrapper.locator('input, textarea, select'),
+            ).toBeDisabled()
+            const tooltip = page.getByRole('tooltip', {
+                name: explanation,
+                exact: true,
+            })
+            await expect(tooltip).toBeVisible()
+            await page.keyboard.press('Escape')
+            await expect(tooltip).toBeHidden()
+        }
+        /* eslint-enable no-await-in-loop */
+        await page.locator('label[for="disabled-amount"]').evaluate((label) => {
+            label.textContent = 'Updated amount'
+        })
+        await expect(
+            page.getByRole('group', { name: 'Updated amount', exact: true }),
+        ).toBeVisible()
+        const amountWrapper = page.locator('#disabled-amount').locator('..')
+        await page.locator('label[for="disabled-amount"]').evaluate((label) => {
+            const replacement = document.createElement('label')
+            replacement.htmlFor = 'disabled-amount'
+            replacement.textContent = 'Replacement amount'
+            label.replaceWith(replacement)
+        })
+        await expect(amountWrapper).toHaveAccessibleName('Replacement amount')
+        await page.locator('label[for="disabled-amount"]').evaluate((label) => {
+            label.htmlFor = 'disabled-notes'
+            const replacement = document.createElement('label')
+            replacement.htmlFor = 'disabled-amount'
+            replacement.textContent = 'Final amount'
+            label.after(replacement)
+        })
+        await expect(amountWrapper).toHaveAccessibleName('Final amount')
+        const results = await new AxeBuilder({ page })
+            .include('section[aria-label="Unavailable fields"]')
+            .analyze()
+        expect(results.violations).toEqual([])
     })
 
     test('flips a top tooltip away from the viewport edge', async ({

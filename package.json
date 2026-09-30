@@ -1,6 +1,6 @@
 {
     "name": "@rentnerkev/tooltips",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "A lightweight, customizable React tooltip component powered by Radix UI.",
     "keywords": [
         "react",
@@ -43,8 +43,8 @@
         "playground:build": "bun --cwd playground build",
         "lint": "oxlint .",
         "lint:fix": "oxlint --fix .",
-        "format": "oxfmt package.json src playground browser-tests playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
-        "format:check": "oxfmt --check package.json src playground browser-tests playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "format": "oxfmt package.json src playground browser-tests scripts playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "format:check": "oxfmt --check package.json src playground browser-tests scripts playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
         "verify": "bun run playground:install && bun run typecheck && bun run playground:typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run playground:build && bun run test:browser && bun run pack:check && bun run pack:consumer"
     },
     "peerDependencies": {

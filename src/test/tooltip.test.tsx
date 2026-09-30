@@ -89,6 +89,7 @@ describe('tooltip API', () => {
         expect(markup).toContain('aria-describedby="download-help"')
         expect(markup).toContain('aria-description="Downloads are unavailable"')
         expect(markup).toContain('data-tooltip-disabled-trigger=""')
+        expect(markup).toContain('role="button"')
         expect(markup).toContain('custom-wrapper')
         expect(markup).toContain('style="pointer-events:none"')
     })
@@ -107,6 +108,16 @@ describe('tooltip API', () => {
         )
 
         expect(markup).toContain('data-state="instant-open"')
+    })
+
+    test('preserves an explicit field label on a disabled group', () => {
+        const markup = renderToStaticMarkup(
+            <CustomTooltip content="Unavailable amount" disabledTrigger>
+                <input aria-labelledby="amount-label" defaultValue="12" />
+            </CustomTooltip>,
+        )
+        expect(markup).toContain('role="group"')
+        expect(markup).toContain('aria-labelledby="amount-label"')
     })
 
     test('rejects children that cannot be disabled natively', () => {

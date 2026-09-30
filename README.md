@@ -106,6 +106,15 @@ accidentally left enabled:
 
 Use `disabled` instead when the tooltip itself should not be active.
 
+The disabled wrapper exposes a disabled button for button triggers, and a
+labelled group for other native controls. The original control keeps its
+native disabled semantics. Child `aria-label` and `aria-labelledby` values
+also label the focusable wrapper. Native `<label htmlFor>` and enclosing
+labels are preserved in the browser; a stable label ID is assigned while
+the wrapper is mounted if the label has none. Changes to the label text
+remain reflected in its accessible name. For labels provided outside the
+native HTML label mechanism, pass `aria-labelledby` on the child.
+
 ### `TooltipProvider`
 
 | Prop                      | Type        | Default | Description                                                    |
