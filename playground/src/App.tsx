@@ -4,6 +4,7 @@ import {
     type TooltipCustomDesign,
     type TooltipProps,
 } from '@rentnerkev/tooltips'
+import { useState } from 'react'
 import type { ChangeEventHandler, ReactNode } from 'react'
 import { usePlaygroundLogic } from './Hooks/usePlaygroundLogic.js'
 
@@ -106,6 +107,9 @@ function BoundaryProbe({
 
 export function App() {
     const { state, handler, setter, ref } = usePlaygroundLogic()
+    const [controlledOpen, setControlledOpen] = useState(false)
+    const [accidentalActivationCount, setAccidentalActivationCount] =
+        useState(0)
     const collisionBoundary = ref.stageRef.current
 
     return (
@@ -340,7 +344,7 @@ export function App() {
                                         </CustomTooltip>
                                     </div>
 
-                                    <div className="absolute bottom-[62px] left-1/2 z-10 grid -translate-x-1/2 justify-items-center gap-2 text-center max-[480px]:w-[calc(100%-110px)]">
+                                    <div className="absolute bottom-[112px] left-1/2 z-10 grid -translate-x-1/2 justify-items-center gap-2 text-center max-[480px]:w-[calc(100%-110px)]">
                                         <p className={targetCaptionClasses}>
                                             Disabled native control
                                         </p>
@@ -365,6 +369,39 @@ export function App() {
                                             </button>
                                         </CustomTooltip>
                                     </div>
+
+                                    <div className="absolute bottom-[20px] left-1/2 z-10 grid -translate-x-1/2 justify-items-center gap-2 text-center max-[480px]:w-[calc(100%-110px)]">
+                                        <p
+                                            className={`${targetCaptionClasses} text-[#364c5b] dark:text-[#d6e0e6]`}
+                                        >
+                                            Enabled child safety
+                                        </p>
+                                        <CustomTooltip
+                                            content="This accidentally enabled control cannot be activated."
+                                            disabledTrigger
+                                            side="top"
+                                            portalContainer={
+                                                state.portalContainer
+                                            }
+                                            customDesign={playgroundDesign}
+                                        >
+                                            <button
+                                                data-testid="accidentally-enabled-trigger"
+                                                className="border border-dashed border-bench-orange bg-[#fff0e9] px-4 py-3 font-bold text-bench-ink max-[480px]:w-full dark:bg-[#39251f] dark:text-bench-paper"
+                                                type="button"
+                                                onClick={() =>
+                                                    setAccidentalActivationCount(
+                                                        (count) => count + 1,
+                                                    )
+                                                }
+                                            >
+                                                Accidentally enabled action
+                                            </button>
+                                        </CustomTooltip>
+                                        <output data-testid="enabled-trigger-activations">
+                                            {accidentalActivationCount}
+                                        </output>
+                                    </div>
                                 </div>
                             </section>
                         </div>
@@ -384,7 +421,7 @@ export function App() {
                     </main>
                 </TooltipProvider>
 
-                <div className="mx-auto mb-5 flex w-[calc(100%-2rem)] max-w-[1180px] justify-center border border-t-0 border-bench-steel bg-[#dce5ea] p-5 max-[800px]:w-[calc(100%-1.25rem)] max-[800px]:max-w-[620px] dark:border-[#385064] dark:bg-[#0a1824]">
+                <div className="mx-auto mb-5 flex w-[calc(100%-2rem)] max-w-[1180px] flex-wrap items-center justify-center gap-5 border border-t-0 border-bench-steel bg-[#dce5ea] p-5 max-[800px]:w-[calc(100%-1.25rem)] max-[800px]:max-w-[620px] dark:border-[#385064] dark:bg-[#0a1824]">
                     <CustomTooltip
                         content="No surrounding provider required."
                         side="top"
@@ -398,6 +435,30 @@ export function App() {
                             Test standalone tooltip
                         </button>
                     </CustomTooltip>
+                    <div className="flex items-center gap-3">
+                        <CustomTooltip
+                            content="This tooltip is controlled by application state."
+                            open={controlledOpen}
+                            onOpenChange={setControlledOpen}
+                            side="top"
+                            customDesign={playgroundDesign}
+                        >
+                            <button
+                                data-testid="controlled-trigger"
+                                className="border border-bench-ink bg-bench-orange px-4 py-3 font-bold text-bench-ink hover:bg-bench-ink hover:text-white dark:border-bench-steel"
+                                type="button"
+                            >
+                                Controlled tooltip
+                            </button>
+                        </CustomTooltip>
+                        <output
+                            aria-live="polite"
+                            data-testid="controlled-state"
+                            className="font-mono text-xs"
+                        >
+                            {controlledOpen ? 'open' : 'closed'}
+                        </output>
+                    </div>
                 </div>
 
                 <div

@@ -35,7 +35,14 @@ test.describe('tooltip playground', () => {
     test('keeps a disabled native trigger focusable and interactive', async ({
         page,
     }) => {
-        const wrapper = page.locator('[data-tooltip-disabled-trigger]')
+        const nativeChild = page.getByTestId('disabled-trigger')
+        const wrapper = page
+            .locator('[data-tooltip-disabled-trigger]')
+            .filter({ has: nativeChild })
+        const enabledChild = page.getByTestId('accidentally-enabled-trigger')
+        const enabledWrapper = page
+            .locator('[data-tooltip-disabled-trigger]')
+            .filter({ has: enabledChild })
 
         await wrapper.hover()
         await expect(page.getByRole('tooltip')).toContainText(
@@ -52,6 +59,63 @@ test.describe('tooltip playground', () => {
         )
         await expect(wrapper).toHaveAttribute('data-state', 'instant-open')
         await expect(wrapper).toHaveAttribute('aria-disabled', 'true')
+        await expect(enabledChild).toBeDisabled()
+
+        await page.getByRole('button', { name: 'SE', exact: true }).focus()
+        await page.keyboard.press('Tab')
+        await expect(page.getByTestId('provider-trigger')).toBeFocused()
+        await page.keyboard.press('Tab')
+        await expect(wrapper).toBeFocused()
+        await page.keyboard.press('Tab')
+        await expect(enabledWrapper).toBeFocused()
+
+        await page.keyboard.press('Enter')
+        await page.keyboard.press(' ')
+        await enabledWrapper.click()
+        await expect(
+            page.getByTestId('enabled-trigger-activations'),
+        ).toHaveText('0')
+
+        const results = await new AxeBuilder({ page })
+            .include('[data-tooltip-disabled-trigger]')
+            .analyze()
+        expect(results.violations).toEqual([])
+    })
+
+    test('supports controlled open state and reports open changes', async ({
+        page,
+    }) => {
+        const trigger = page.getByTestId('controlled-trigger')
+        const state = page.getByTestId('controlled-state')
+
+        await expect(state).toHaveText('closed')
+        await trigger.hover()
+        const tooltip = page.getByRole('tooltip')
+        await expect(tooltip).toContainText('controlled by application state')
+        await expect(state).toHaveText('open')
+
+        await page.keyboard.press('Escape')
+        await expect(tooltip).toBeHidden()
+        await expect(state).toHaveText('closed')
+    })
+
+    test('flips a top tooltip away from the viewport edge', async ({
+        page,
+    }) => {
+        await page.setViewportSize({ width: 800, height: 600 })
+        const trigger = page.getByTestId('standalone-trigger')
+        await trigger.evaluate((element) => {
+            const target = element as HTMLElement
+            target.style.position = 'fixed'
+            target.style.top = '0px'
+            target.style.left = '50%'
+            target.style.transform = 'translateX(-50%)'
+        })
+
+        await trigger.hover()
+        const tooltip = page.getByRole('tooltip')
+        await expect(tooltip).toBeVisible()
+        await expect(tooltip).toHaveAttribute('data-side', 'bottom')
     })
 
     test('disables tooltip animation when reduced motion is requested', async ({

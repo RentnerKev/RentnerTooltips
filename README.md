@@ -64,7 +64,7 @@ ARIA behavior.
 | `children`                 | `ReactElement`                              | –               | A single element that triggers the tooltip.                         |
 | `content`                  | `ReactNode`                                 | –               | The accessible content of the tooltip.                              |
 | `disabled`                 | `boolean`                                   | `false`         | Returns the trigger without any tooltip behavior.                   |
-| `disabledTrigger`          | `boolean`                                   | `false`         | Wraps a disabled control in a hoverable, focusable trigger.         |
+| `disabledTrigger`          | `boolean`                                   | `false`         | Wraps a disabled control in a focusable tooltip trigger and blocks child activation. |
 | `disabledTriggerClassName` | `string`                                    | `undefined`     | Adds classes to the disabled-trigger wrapper.                       |
 | `delayDuration`            | `number`                                    | Provider value  | Overrides the provider delay for this tooltip.                      |
 | `disableHoverableContent`  | `boolean`                                   | Provider value  | Closes the tooltip when the pointer leaves the trigger.             |
@@ -84,10 +84,14 @@ ARIA behavior.
 | `portalContainer`          | `Element \| DocumentFragment \| null`       | `document.body` | Custom portal destination.                                          |
 | `customDesign`             | `TooltipCustomDesign`                       | Default design  | Overrides individual classes for the content, animation, and arrow. |
 
-`disabledTrigger` is intended for native disabled controls, which cannot
-receive pointer or keyboard events themselves. It keeps the original control
-disabled, applies `pointer-events: none` to it, and makes an outer `span`
-focusable so the explanatory tooltip remains available:
+`disabledTrigger` accepts a native `button`, `input`, `select`, or `textarea`
+child. Other child types throw an error because they cannot be disabled
+reliably. Native disabled controls cannot
+receive pointer or keyboard events themselves. It keeps supported native
+controls disabled, removes the child from the tab order, blocks its click and
+keyboard handlers, and makes an outer `span` focusable so the explanatory
+tooltip remains available. This also protects against a child that was
+accidentally left enabled:
 
 ```tsx
 <CustomTooltip

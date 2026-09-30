@@ -2,6 +2,8 @@ import { cloneElement, forwardRef } from 'react'
 import type {
     ComponentPropsWithoutRef,
     CSSProperties,
+    KeyboardEventHandler,
+    MouseEventHandler,
     ReactElement,
 } from 'react'
 
@@ -10,7 +12,14 @@ interface DisabledTriggerChildProps {
     'aria-describedby'?: string
     'aria-label'?: string
     'aria-labelledby'?: string
+    contentEditable?: boolean
+    disabled?: boolean
+    draggable?: boolean
+    onClick?: MouseEventHandler
+    onKeyDown?: KeyboardEventHandler
+    onKeyUp?: KeyboardEventHandler
     style?: CSSProperties
+    tabIndex?: number
 }
 
 interface DisabledTooltipTriggerProps extends Omit<
@@ -18,6 +27,21 @@ interface DisabledTooltipTriggerProps extends Omit<
     'children'
 > {
     children: ReactElement
+}
+
+const nativeDisableableElements = new Set([
+    'button',
+    'input',
+    'select',
+    'textarea',
+])
+
+function preventChildActivation(event: {
+    preventDefault(): void
+    stopPropagation(): void
+}) {
+    event.preventDefault()
+    event.stopPropagation()
 }
 
 export const DisabledTooltipTrigger = forwardRef<
@@ -53,6 +77,15 @@ export const DisabledTooltipTrigger = forwardRef<
         triggerProps['aria-description']
     const ariaLabel =
         disabledChild.props['aria-label'] ?? triggerProps['aria-label']
+    const hasNativeDisabledState =
+        typeof disabledChild.type === 'string' &&
+        nativeDisableableElements.has(disabledChild.type)
+
+    if (!hasNativeDisabledState) {
+        throw new TypeError(
+            'disabledTrigger requires a native button, input, select, or textarea child.',
+        )
+    }
 
     return (
         <span
@@ -68,10 +101,17 @@ export const DisabledTooltipTrigger = forwardRef<
             className={wrapperClassName}
         >
             {cloneElement(disabledChild, {
+                disabled: true,
+                contentEditable: false,
+                draggable: false,
+                onClick: preventChildActivation,
+                onKeyDown: preventChildActivation,
+                onKeyUp: preventChildActivation,
                 style: {
                     ...disabledChild.props.style,
                     pointerEvents: 'none',
                 },
+                tabIndex: -1,
             })}
         </span>
     )

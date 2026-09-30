@@ -109,6 +109,18 @@ describe('tooltip API', () => {
         expect(markup).toContain('data-state="instant-open"')
     })
 
+    test('rejects children that cannot be disabled natively', () => {
+        expect(() =>
+            renderToStaticMarkup(
+                <CustomTooltip content="Unavailable" disabledTrigger>
+                    <a href="/danger">Danger</a>
+                </CustomTooltip>,
+            ),
+        ).toThrow(
+            'disabledTrigger requires a native button, input, select, or textarea child.',
+        )
+    })
+
     test('accepts delay, collision, positioning, and portal options', () => {
         const markup = renderToStaticMarkup(
             <CustomTooltip
