@@ -15,6 +15,12 @@ import type {
     ReactElement,
 } from 'react'
 
+import {
+    releaseNativeLabelId,
+    retainNativeLabelId,
+    subscribeNativeLabels,
+} from './nativeLabelObserver.js'
+
 interface DisabledTriggerChildProps {
     'aria-description'?: string
     'aria-describedby'?: string
@@ -91,120 +97,58 @@ export const DisabledTooltipTrigger = forwardRef<
         [forwardedRef],
     )
     useLayoutEffect(() => {
-        if (hasExplicitLabel) {
-            return
-        }
-        const assignedIds = new Map<HTMLLabelElement, string>()
-        let currentControl:
-            | HTMLButtonElement
-            | HTMLInputElement
-            | HTMLSelectElement
-            | HTMLTextAreaElement
-            | null = null
+        if (hasExplicitLabel) return
+        const owner = {}
         let currentLabels: HTMLLabelElement[] = []
         let observedRoot: Node | null = null
-
-        function getCurrentControl() {
-            const control = wrapperRef.current?.firstElementChild as
-                | HTMLButtonElement
-                | HTMLInputElement
-                | HTMLSelectElement
-                | HTMLTextAreaElement
-                | null
-            if (
-                !control ||
-                typeof controlType !== 'string' ||
-                control.localName !== controlType ||
-                control.id !== (controlId ?? '')
-            ) {
-                return null
-            }
-            return control
-        }
-
-        function observeCurrentRoot(observer: MutationObserver) {
-            const root = wrapperRef.current?.getRootNode()
-            if (!root || root === observedRoot) return
-
-            observer.disconnect()
-            // Labels can live outside the wrapper; compare only this control's
-            // live labels instead of rescanning the owning tree.
-            observer.observe(root, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['id', 'for'],
-            })
-            observedRoot = root
-        }
+        let unsubscribe: (() => void) | undefined
 
         function syncLabels() {
-            const control = getCurrentControl()
-            const labels = Array.from(control?.labels ?? [])
-            for (const [label, assignedId] of assignedIds) {
-                if (!labels.includes(label) || label.id !== assignedId) {
-                    if (label.id === assignedId) label.removeAttribute('id')
-                    assignedIds.delete(label)
-                }
+            const wrapper = wrapperRef.current
+            const root = wrapper?.getRootNode()
+            if (wrapper && root && root !== observedRoot) {
+                unsubscribe?.()
+                unsubscribe = subscribeNativeLabels(wrapper, syncLabels)
+                observedRoot = root
             }
-
-            const ids = labels.map((label) => {
-                if (!label.id) {
-                    const root = control?.getRootNode()
+            const child = wrapper?.firstElementChild
+            const control =
+                child &&
+                typeof controlType === 'string' &&
+                child.localName === controlType
+                    ? (child as
+                          | HTMLButtonElement
+                          | HTMLInputElement
+                          | HTMLSelectElement
+                          | HTMLTextAreaElement)
+                    : null
+            const labels = Array.from(control?.labels ?? [])
+            for (const label of currentLabels) {
+                if (!labels.includes(label)) releaseNativeLabelId(label, owner)
+            }
+            const ids = labels.map((label) =>
+                retainNativeLabelId(label, owner, () => {
                     let assignedId = `${labelPrefix}-native-label-${nextLabelId.current++}`
                     while (getRootElementById(root, assignedId)) {
                         assignedId = `${labelPrefix}-native-label-${nextLabelId.current++}`
                     }
-                    label.id = assignedId
-                    assignedIds.set(label, assignedId)
-                }
-                return label.id
-            })
-            currentControl = control
+                    return assignedId
+                }),
+            )
             currentLabels = labels
             const nextIds = ids.join(' ') || undefined
             setNativeLabelIds((previousIds) =>
                 previousIds === nextIds ? previousIds : nextIds,
             )
         }
-
-        const observer = new MutationObserver((records) => {
-            observeCurrentRoot(observer)
-            const control = getCurrentControl()
-            const labels = Array.from(control?.labels ?? [])
-            let shouldSync =
-                control !== currentControl ||
-                labels.length !== currentLabels.length ||
-                labels.some((label, index) => label !== currentLabels[index])
-
-            if (!shouldSync) {
-                shouldSync = records.some((record) => {
-                    if (
-                        record.type !== 'attributes' ||
-                        record.attributeName !== 'id'
-                    ) {
-                        return false
-                    }
-
-                    const label = record.target as HTMLLabelElement
-                    return (
-                        currentLabels.includes(label) &&
-                        assignedIds.get(label) !== label.id
-                    )
-                })
-            }
-
-            if (shouldSync) syncLabels()
-        })
-        observeCurrentRoot(observer)
         syncLabels()
-
         return () => {
-            observer.disconnect()
-            for (const [label, assignedId] of assignedIds) {
-                if (label.id === assignedId) label.removeAttribute('id')
-            }
+            unsubscribe?.()
+            for (const label of currentLabels)
+                releaseNativeLabelId(label, owner)
         }
+        // React id changes must refresh the proxy name before paint as well.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlId, controlType, hasExplicitLabel, labelPrefix])
     const wrapperClassName = [
         'inline-flex rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
