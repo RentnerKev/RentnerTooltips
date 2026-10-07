@@ -17,9 +17,9 @@ Accessible React tooltips with flexible placement, collision handling, disabled 
 Requires React 19, React DOM 19, and Tailwind CSS 4.
 
 ```bash
-bun add @rentnerkev/tooltips
-# npm alternative
 npm install @rentnerkev/tooltips
+# or with Bun
+bun add @rentnerkev/tooltips
 ```
 
 Add to your application stylesheet:
