@@ -1,8 +1,8 @@
-export { CustomTooltip } from './CustomTooltip.js'
-export { TooltipProvider } from './TooltipProvider.js'
-export { defaultTooltipDesign } from './types.js'
+export { CustomTooltip } from './shared/Tooltip/Components/CustomTooltip.js'
+export { TooltipProvider } from './shared/Tooltip/Components/TooltipProvider.js'
+export { defaultTooltipDesign } from './config/tooltip.config.js'
 export type {
     TooltipCustomDesign,
     TooltipProps,
     TooltipProviderProps,
-} from './types.js'
+} from './shared/Tooltip/Types/tooltip.types.js'

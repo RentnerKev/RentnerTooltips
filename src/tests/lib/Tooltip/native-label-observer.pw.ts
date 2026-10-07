@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { fileURLToPath } from 'node:url'
 
-const moduleURL = `/@fs/${fileURLToPath(new URL('../src/nativeLabelObserver.ts', import.meta.url)).replaceAll('\\', '/')}`
+const moduleURL = `/@fs/${fileURLToPath(new URL('../../../lib/Tooltip/nativeLabelObserver.ts', import.meta.url)).replaceAll('\\', '/')}`
 
 test('shares root observers, skips unrelated mutations, and disconnects the final subscriber', async ({
     page,
@@ -9,10 +9,16 @@ test('shares root observers, skips unrelated mutations, and disconnects the fina
     await page.goto('/')
     const result = await page.evaluate(async (url) => {
         const { subscribeNativeLabels } = await import(url)
-        const host = document.createElement('div')
-        document.body.append(host)
+        // Keep app hydration and native-label effects out of this observer
+        // accounting test; the other cases exercise the live document.
+        const isolatedDocument = document.implementation.createHTMLDocument(
+            'Native label observer',
+        )
+        const host = isolatedDocument.createElement('div')
+        isolatedDocument.body.append(host)
         const root = host.attachShadow({ mode: 'open' })
-        const NativeObserver = window.MutationObserver
+        const view = document.defaultView!
+        const NativeObserver = view.MutationObserver
         let observations = 0
         let disconnects = 0
         window.MutationObserver = class extends NativeObserver {
@@ -30,9 +36,7 @@ test('shares root observers, skips unrelated mutations, and disconnects the fina
             }
         }
         const tick = () =>
-            new Promise<void>((resolve) =>
-                root.ownerDocument.defaultView!.setTimeout(resolve, 0),
-            )
+            new Promise<void>((resolve) => view.setTimeout(resolve, 0))
         let callbacks = 0
         const wrappers = Array.from({ length: 100 }, () => {
             const wrapper = document.createElement('span')

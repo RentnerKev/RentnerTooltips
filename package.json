@@ -32,7 +32,8 @@
     ],
     "scripts": {
         "build": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\" && tsc",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc --noEmit && bun run typecheck:automation",
+        "typecheck:automation": "tsc --noEmit -p .github/scripts/tsconfig.json",
         "test": "bun test",
         "test:browser": "playwright test --config=playwright.config.ts",
         "pack:check": "bun pm pack --dry-run --ignore-scripts",
@@ -43,8 +44,8 @@
         "playground:build": "bun --cwd playground build",
         "lint": "oxlint .",
         "lint:fix": "oxlint --fix .",
-        "format": "oxfmt package.json src playground browser-tests scripts playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
-        "format:check": "oxfmt --check package.json src playground browser-tests scripts playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "format": "oxfmt package.json src playground scripts playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
+        "format:check": "oxfmt --check package.json src playground scripts playwright.config.ts tailwind.css .github bunfig.toml tsconfig.json .oxfmtrc.json .oxlintrc.json",
         "verify": "bun run playground:install && bun run typecheck && bun run playground:typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run playground:build && bun run test:browser && bun run pack:check && bun run pack:consumer"
     },
     "peerDependencies": {
@@ -57,6 +58,7 @@
     "devDependencies": {
         "@axe-core/playwright": "^4.13.0",
         "@playwright/test": "^1.63.0",
+        "@types/node": "^24.19.1",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "oxfmt": "^0.72.0",

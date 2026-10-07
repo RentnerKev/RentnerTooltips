@@ -1,12 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import { useContext } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import * as publicApi from '../index'
-import { CustomTooltip } from '../CustomTooltip'
-import {
-    TooltipProvider,
-    TooltipProviderDepthContext,
-} from '../TooltipProvider'
+import * as publicApi from '../../../index.js'
+import { CustomTooltip } from '../../../shared/Tooltip/Components/CustomTooltip.js'
+import { TooltipProvider } from '../../../shared/Tooltip/Components/TooltipProvider.js'
+import { TooltipProviderDepthContext } from '../../../shared/Tooltip/TooltipContext.js'
 
 function ProviderDepthProbe() {
     const providerDepth = useContext(TooltipProviderDepthContext)
@@ -76,6 +74,7 @@ describe('tooltip API', () => {
                     disabled
                     aria-label="Download"
                     aria-describedby="download-help"
+                    // oxlint-disable-next-line jsx-a11y/role-supports-aria-props -- aria-description is global in WAI-ARIA 1.3; this regression checks its existing proxy forwarding.
                     aria-description="Downloads are unavailable"
                 >
                     Download

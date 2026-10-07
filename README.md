@@ -66,30 +66,30 @@ starts from `defaultOpen` again; a controlled tooltip follows its `open` prop.
 
 ### `CustomTooltip`
 
-| Prop                       | Type                                        | Default         | Description                                                         |
-| -------------------------- | ------------------------------------------- | --------------- | ------------------------------------------------------------------- |
-| `children`                 | `ReactElement`                              | –               | A single element that triggers the tooltip.                         |
-| `content`                  | `ReactNode`                                 | –               | The accessible content of the tooltip.                              |
-| `disabled`                 | `boolean`                                   | `false`         | Returns the trigger without any tooltip behavior.                   |
+| Prop                       | Type                                        | Default         | Description                                                                          |
+| -------------------------- | ------------------------------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| `children`                 | `ReactElement`                              | –               | A single element that triggers the tooltip.                                          |
+| `content`                  | `ReactNode`                                 | –               | The accessible content of the tooltip.                                               |
+| `disabled`                 | `boolean`                                   | `false`         | Returns the trigger without any tooltip behavior.                                    |
 | `disabledTrigger`          | `boolean`                                   | `false`         | Wraps a disabled control in a focusable tooltip trigger and blocks child activation. |
-| `disabledTriggerClassName` | `string`                                    | `undefined`     | Adds classes to the disabled-trigger wrapper.                       |
-| `delayDuration`            | `number`                                    | Provider value  | Overrides the provider delay for this tooltip.                      |
-| `disableHoverableContent`  | `boolean`                                   | Provider value  | Closes the tooltip when the pointer leaves the trigger.             |
-| `open`                     | `boolean`                                   | `undefined`     | Controls the open state.                                            |
-| `defaultOpen`              | `boolean`                                   | `undefined`     | Sets the uncontrolled initial open state.                           |
-| `onOpenChange`             | `(open: boolean) => void`                   | `undefined`     | Receives open-state changes.                                        |
-| `side`                     | `'top' \| 'right' \| 'bottom' \| 'left'`    | `'top'`         | The preferred position.                                             |
-| `sideOffset`               | `number`                                    | `8`             | Distance from the trigger in pixels.                                |
-| `align`                    | `'start' \| 'center' \| 'end'`              | `'center'`      | Alignment along the selected side.                                  |
-| `alignOffset`              | `number`                                    | `0`             | Offset from the selected alignment.                                 |
-| `avoidCollisions`          | `boolean`                                   | `true`          | Allows Radix to move content away from boundaries.                  |
-| `collisionBoundary`        | `Element \| null \| Array<Element \| null>` | `[]`            | Custom collision boundary or boundaries.                            |
-| `collisionPadding`         | `number \| SidePadding`                     | `0`             | Space kept between content and collision boundaries.                |
-| `arrowPadding`             | `number`                                    | `0`             | Space kept between the arrow and content edges.                     |
-| `sticky`                   | `'partial' \| 'always'`                     | `'partial'`     | Controls how content behaves at a boundary.                         |
-| `hideWhenDetached`         | `boolean`                                   | `false`         | Hides content when its trigger is detached.                         |
-| `portalContainer`          | `Element \| DocumentFragment \| null`       | `document.body` | Custom portal destination.                                          |
-| `customDesign`             | `TooltipCustomDesign`                       | Default design  | Overrides individual classes for the content, animation, and arrow. |
+| `disabledTriggerClassName` | `string`                                    | `undefined`     | Adds classes to the disabled-trigger wrapper.                                        |
+| `delayDuration`            | `number`                                    | Provider value  | Overrides the provider delay for this tooltip.                                       |
+| `disableHoverableContent`  | `boolean`                                   | Provider value  | Closes the tooltip when the pointer leaves the trigger.                              |
+| `open`                     | `boolean`                                   | `undefined`     | Controls the open state.                                                             |
+| `defaultOpen`              | `boolean`                                   | `undefined`     | Sets the uncontrolled initial open state.                                            |
+| `onOpenChange`             | `(open: boolean) => void`                   | `undefined`     | Receives open-state changes.                                                         |
+| `side`                     | `'top' \| 'right' \| 'bottom' \| 'left'`    | `'top'`         | The preferred position.                                                              |
+| `sideOffset`               | `number`                                    | `8`             | Distance from the trigger in pixels.                                                 |
+| `align`                    | `'start' \| 'center' \| 'end'`              | `'center'`      | Alignment along the selected side.                                                   |
+| `alignOffset`              | `number`                                    | `0`             | Offset from the selected alignment.                                                  |
+| `avoidCollisions`          | `boolean`                                   | `true`          | Allows Radix to move content away from boundaries.                                   |
+| `collisionBoundary`        | `Element \| null \| Array<Element \| null>` | `[]`            | Custom collision boundary or boundaries.                                             |
+| `collisionPadding`         | `number \| SidePadding`                     | `0`             | Space kept between content and collision boundaries.                                 |
+| `arrowPadding`             | `number`                                    | `0`             | Space kept between the arrow and content edges.                                      |
+| `sticky`                   | `'partial' \| 'always'`                     | `'partial'`     | Controls how content behaves at a boundary.                                          |
+| `hideWhenDetached`         | `boolean`                                   | `false`         | Hides content when its trigger is detached.                                          |
+| `portalContainer`          | `Element \| DocumentFragment \| null`       | `document.body` | Custom portal destination.                                                           |
+| `customDesign`             | `TooltipCustomDesign`                       | Default design  | Overrides individual classes for the content, animation, and arrow.                  |
 
 `disabledTrigger` accepts a native `button`, `input`, `select`, or `textarea`
 child. Other child types throw an error because they cannot be disabled
@@ -216,7 +216,21 @@ bun run verify
 
 `bun run verify` checks types, Oxlint, Oxfmt, unit tests, browser tests, the
 build, and the published package contents with `bun pm pack --dry-run`. Install
-the Playwright browser once with `bunx playwright install chromium`.
+the Playwright browsers once with `bunx playwright install chromium firefox webkit`.
+
+The published root components and `./tooltip` / `./types` entries retain their
+API and paths. Their presentation templates live under
+`src/shared/Tooltip/Components`, with owning logic hooks and typed contracts
+under the same domain's `Hooks` and `Types`. DOM label subscriptions
+live in `src/lib/Tooltip`; the default design is declarative configuration in
+`src/config`. Unit and browser tests share `src/tests`, with browser tests
+mirroring their shared UI or lib owner.
+
+Repository-only validation and release scripts live under `.github/scripts`.
+TypeScript handles structured policy, GitHub API data and release notes; shell
+handles verified downloads and process orchestration. Their strict typecheck is
+part of `bun run typecheck`. See [repository automation](.github/AUTOMATION.md)
+for the trust boundaries and publication policy.
 
 ### Playground
 

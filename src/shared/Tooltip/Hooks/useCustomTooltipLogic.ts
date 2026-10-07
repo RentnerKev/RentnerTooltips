@@ -1,20 +1,29 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { FocusEvent } from 'react'
-import type { TooltipProps } from './types.js'
+import { useContext, useCallback, useEffect, useRef, useState } from 'react'
+import type { FocusEvent, PointerEvent } from 'react'
+import { defaultTooltipDesign } from '../../../config/tooltip.config.js'
+import {
+    TooltipProviderDepthContext,
+    TooltipHoverableContentContext,
+} from '../TooltipContext.js'
+import type { TooltipProps } from '../Types/tooltip.types.js'
+import type {
+    FocusSettlement,
+    CustomTooltipLogicResult,
+} from '../Types/custom-tooltip-logic.types.js'
 
-interface FocusSettlement {
-    trigger: HTMLElement
-    view: Window
-    frame: number
-    onScroll: (event: Event) => void
-}
-
-export function useTooltipState({
+export function useCustomTooltipLogic({
     open,
     defaultOpen,
     onOpenChange,
     disabled,
-}: Pick<TooltipProps, 'open' | 'defaultOpen' | 'onOpenChange' | 'disabled'>) {
+    disableHoverableContent,
+    customDesign,
+}: TooltipProps): CustomTooltipLogicResult {
+    const providerDepth = useContext(TooltipProviderDepthContext)
+    const inheritedDisableHoverableContent = useContext(
+        TooltipHoverableContentContext,
+    )
+    const design = { ...defaultTooltipDesign, ...customDesign }
     const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false)
     if (disabled && internalOpen !== (defaultOpen ?? false)) {
         setInternalOpen(defaultOpen ?? false)
@@ -108,5 +117,17 @@ export function useTooltipState({
         }
     }
 
-    return { isOpen, handleOpenChange, handleFocus, handleDismissal }
+    function handlePointerLeave(event: PointerEvent<HTMLElement>) {
+        if (disableHoverableContent ?? inheritedDisableHoverableContent)
+            handleDismissal(event)
+    }
+    return {
+        state: { isOpen, providerDepth, design },
+        handler: {
+            handleOpenChange,
+            handleFocus,
+            handleDismissal,
+            handlePointerLeave,
+        },
+    }
 }
