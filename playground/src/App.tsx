@@ -1,116 +1,23 @@
-import {
-    CustomTooltip,
-    TooltipProvider,
-    type TooltipCustomDesign,
-    type TooltipProps,
-} from '@rentnerkev/tooltips'
-import { useState } from 'react'
-import type { ChangeEventHandler, ReactNode } from 'react'
+import { CustomTooltip, TooltipProvider } from '@rentnerkev/tooltips'
 import { usePlaygroundLogic } from './Hooks/usePlaygroundLogic.js'
-
-const playgroundDesign: TooltipCustomDesign = {
-    baseClasses:
-        'max-w-[250px] border border-bench-orange bg-bench-ink px-3 py-2.5 text-white shadow-[4px_4px_0_rgba(23,107,135,0.3)] dark:bg-bench-paper dark:text-bench-ink',
-    animationClasses: 'tooltip-open-motion motion-reduce:!animate-none',
-    contentClasses: 'text-[0.72rem] leading-[1.45]',
-    arrowClasses: 'fill-bench-ink dark:fill-bench-paper',
-}
-
-const sectionHeadingClasses =
-    'm-0 text-[0.8rem] font-semibold tracking-[0.1em] uppercase'
-const fieldDividerClasses = 'border-b border-[#c9d4da] dark:border-[#385064]'
-const targetCaptionClasses =
-    'm-0 font-mono text-[0.62rem] tracking-[0.06em] text-[#5f7280] uppercase dark:text-bench-steel'
-
-interface ToggleRowProps {
-    checked: boolean
-    description: string
-    label: string
-    onChange: ChangeEventHandler<HTMLInputElement>
-}
-
-function ToggleRow({ checked, description, label, onChange }: ToggleRowProps) {
-    return (
-        <label
-            className={`flex cursor-pointer items-center justify-between gap-3.5 py-[18px] ${fieldDividerClasses}`}
-        >
-            <span className="text-[0.78rem] font-bold tracking-[0.025em]">
-                {label}
-                <small className="mt-0.5 block text-[0.68rem] leading-[1.35] font-medium text-[#5f7280] dark:text-bench-steel">
-                    {description}
-                </small>
-            </span>
-            <input
-                className="h-[19px] w-[19px] shrink-0 accent-bench-teal"
-                type="checkbox"
-                checked={checked}
-                onChange={onChange}
-            />
-        </label>
-    )
-}
-
-interface SignalRowProps {
-    label: string
-    value: ReactNode
-}
-
-function SignalRow({ label, value }: SignalRowProps) {
-    return (
-        <div className="flex justify-between gap-4 border-b border-dotted border-[#8295a1] py-2 dark:border-[#526a7c]">
-            <dt className="text-[#5f7280] dark:text-bench-steel">{label}</dt>
-            <dd className="m-0 font-extrabold text-bench-teal dark:text-[#69c7df]">
-                {value}
-            </dd>
-        </div>
-    )
-}
-
-interface ProbeProps {
-    label: string
-    className: string
-    side: NonNullable<TooltipProps['side']>
-    boundary: HTMLDivElement | null
-    portalContainer: HTMLDivElement | null
-    disabled: boolean
-}
-
-function BoundaryProbe({
-    label,
-    className,
-    side,
-    boundary,
-    portalContainer,
-    disabled,
-}: ProbeProps) {
-    return (
-        <div className={`absolute z-10 ${className}`}>
-            <CustomTooltip
-                content={`${label}: Radix may flip this tooltip at the boundary.`}
-                side={side}
-                collisionBoundary={boundary}
-                collisionPadding={18}
-                portalContainer={portalContainer}
-                disabled={disabled}
-                customDesign={playgroundDesign}
-            >
-                <button
-                    className="h-[38px] w-[46px] cursor-help border border-bench-ink bg-white font-mono text-[0.69rem] font-extrabold text-bench-ink shadow-[3px_3px_0_#a9b8c2] hover:bg-bench-teal hover:text-white dark:border-bench-steel dark:bg-[#142b3d] dark:text-bench-paper dark:shadow-[3px_3px_0_#385064] dark:hover:bg-bench-teal"
-                    type="button"
-                >
-                    {label}
-                </button>
-            </CustomTooltip>
-        </div>
-    )
-}
+import { ToggleRow } from './Components/ToggleRow.js'
+import { SignalRow } from './Components/SignalRow.js'
+import { BoundaryProbe } from './Components/BoundaryProbe.js'
+import {
+    playgroundDesign,
+    sectionHeadingClasses,
+    fieldDividerClasses,
+    targetCaptionClasses,
+} from './config/playground.config.js'
 
 export function App() {
-    const { state, handler, setter, ref } = usePlaygroundLogic()
-    const [controlledOpen, setControlledOpen] = useState(false)
-    const [accidentalActivationCount, setAccidentalActivationCount] =
-        useState(0)
-    const collisionBoundary = ref.stageRef.current
+    const {
+        state,
+        handler,
+        setter,
+        refs: { handleStageMount, handlePortalMount },
+    } = usePlaygroundLogic()
+    const collisionBoundary = state.collisionBoundary
 
     return (
         <div
@@ -275,7 +182,7 @@ export function App() {
 
                                 <div
                                     className="stage-grid stage-crosshair relative min-h-[460px] overflow-hidden border-2 border-bench-ink bg-[#f8fafb] max-[480px]:min-h-[520px] dark:border-bench-steel dark:bg-[#0c1c29]"
-                                    ref={ref.stageRef}
+                                    ref={handleStageMount}
                                 >
                                     <span className="absolute right-2.5 bottom-[7px] z-[1] font-mono text-[0.58rem] tracking-[0.08em] text-[#70838f] uppercase dark:text-bench-steel">
                                         X boundary
@@ -389,17 +296,15 @@ export function App() {
                                                 data-testid="accidentally-enabled-trigger"
                                                 className="border border-dashed border-bench-orange bg-[#fff0e9] px-4 py-3 font-bold text-bench-ink max-[480px]:w-full dark:bg-[#39251f] dark:text-bench-paper"
                                                 type="button"
-                                                onClick={() =>
-                                                    setAccidentalActivationCount(
-                                                        (count) => count + 1,
-                                                    )
+                                                onClick={
+                                                    handler.handleAccidentalActivation
                                                 }
                                             >
                                                 Accidentally enabled action
                                             </button>
                                         </CustomTooltip>
                                         <output data-testid="enabled-trigger-activations">
-                                            {accidentalActivationCount}
+                                            {state.accidentalActivationCount}
                                         </output>
                                     </div>
                                 </div>
@@ -438,8 +343,8 @@ export function App() {
                     <div className="flex items-center gap-3">
                         <CustomTooltip
                             content="This tooltip is controlled by application state."
-                            open={controlledOpen}
-                            onOpenChange={setControlledOpen}
+                            open={state.controlledOpen}
+                            onOpenChange={setter.setControlledOpen}
                             side="top"
                             customDesign={playgroundDesign}
                         >
@@ -456,15 +361,14 @@ export function App() {
                             data-testid="controlled-state"
                             className="font-mono text-xs"
                         >
-                            {controlledOpen ? 'open' : 'closed'}
+                            {state.controlledOpen ? 'open' : 'closed'}
                         </output>
                     </div>
                 </div>
 
-                <div
+                <section
                     id="tooltip-portal-host"
-                    ref={setter.setPortalContainer}
-                    role="region"
+                    ref={handlePortalMount}
                     aria-label="Tooltip descriptions"
                 />
                 <section

@@ -7,5 +7,17 @@
     "useTabs": false,
     "printWidth": 80,
     "sortPackageJson": false,
-    "ignorePatterns": ["dist/", "build/", "node_modules/", "bun.lock"]
+    "ignorePatterns": [
+        "**/dist/",
+        "**/build/",
+        "**/node_modules/",
+        "bun.lock",
+        "**/drizzle/",
+        "**/.env",
+        "**/.env.*",
+        "**/routeTree.gen.ts",
+        "**/*.generated.ts",
+        "test-results/",
+        "playwright-report/"
+    ]
 }

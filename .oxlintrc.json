@@ -8,6 +8,7 @@
     "plugins": [
         "typescript",
         "react",
+        "jsx-a11y",
         "import",
         "unicorn",
         "promise",
@@ -15,12 +16,19 @@
         "oxc"
     ],
     "ignorePatterns": [
-        "dist/**",
-        "build/**",
-        "node_modules/**",
-        "playground/**"
+        "**/dist/**",
+        "**/build/**",
+        "**/node_modules/**",
+        "**/drizzle/**",
+        "**/.env",
+        "**/.env.*",
+        "**/routeTree.gen.ts",
+        "**/*.generated.ts",
+        "test-results/**",
+        "playwright-report/**"
     ],
     "rules": {
+        "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }],
         "typescript/no-explicit-any": "warn",
         "typescript/no-unused-vars": [
             "error",
