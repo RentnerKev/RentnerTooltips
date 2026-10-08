@@ -1,5 +1,40 @@
 import { CustomTooltip, TooltipProvider } from '@rentnerkev/tooltips'
+import type {
+    TooltipCustomDesign,
+    TooltipProviderProps,
+} from '@rentnerkev/tooltips'
+import { CustomTooltip as SubpathTooltip } from '@rentnerkev/tooltips/tooltip'
+import type {
+    TooltipCustomDesign as SubpathDesign,
+    TooltipProps as SubpathTooltipProps,
+    TooltipProviderProps as SubpathProviderProps,
+} from '@rentnerkev/tooltips/tooltip'
+import type {
+    TooltipCustomDesign as TypesDesign,
+    TooltipProviderProps as TypesProviderProps,
+} from '@rentnerkev/tooltips/types'
 import { useState } from 'react'
+
+const consumerDesign: TooltipCustomDesign & SubpathDesign & TypesDesign =
+    Object.freeze({
+        contentClasses: 'text-sm font-semibold',
+        arrowClasses: 'fill-orange-500',
+    })
+const consumerProviderProps: Omit<TooltipProviderProps, 'children'> = {
+    customDesign: consumerDesign,
+    delayDuration: 0,
+}
+const consumerNestedProviderProps: Omit<SubpathProviderProps, 'children'> = {
+    customDesign: { arrowClasses: 'fill-blue-500' },
+}
+const consumerSeparateProviderProps: Omit<TypesProviderProps, 'children'> = {
+    customDesign: { arrowClasses: 'fill-green-500' },
+    delayDuration: 0,
+    disableHoverableContent: true,
+}
+const consumerLocalProps: Pick<SubpathTooltipProps, 'customDesign'> = {
+    customDesign: { contentClasses: 'text-lg italic' },
+}
 
 export function App() {
     const [activations, setActivations] = useState(0)
@@ -8,12 +43,30 @@ export function App() {
     const [controlledOpen, setControlledOpen] = useState(false)
     return (
         <>
-            <TooltipProvider delayDuration={0}>
+            <TooltipProvider {...consumerProviderProps}>
                 <CustomTooltip content="Consumer help">
                     <button type="button" className="px-4 py-2">
                         Show help
                     </button>
                 </CustomTooltip>
+                <SubpathTooltip
+                    content="Consumer local design"
+                    {...consumerLocalProps}
+                >
+                    <button type="button" data-testid="consumer-local-design">
+                        Local design
+                    </button>
+                </SubpathTooltip>
+                <TooltipProvider {...consumerNestedProviderProps}>
+                    <SubpathTooltip content="Consumer nested design">
+                        <button
+                            type="button"
+                            data-testid="consumer-nested-design"
+                        >
+                            Nested design
+                        </button>
+                    </SubpathTooltip>
+                </TooltipProvider>
                 {showPrefix && <label htmlFor="consumer-amount">Prefix</label>}
                 <label htmlFor="consumer-amount">Amount</label>
                 <CustomTooltip
@@ -83,7 +136,7 @@ export function App() {
                     </CustomTooltip>
                 </section>
             </TooltipProvider>
-            <TooltipProvider delayDuration={0} disableHoverableContent>
+            <TooltipProvider {...consumerSeparateProviderProps}>
                 <CustomTooltip content="Inherited pointer leave explanation">
                     <button type="button" data-testid="inherited-leave">
                         Inherited pointer leave help

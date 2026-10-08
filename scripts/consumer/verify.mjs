@@ -25,6 +25,10 @@ const manifest = JSON.parse(
 const playground = JSON.parse(
     readFileSync(join(packageRoot, 'playground/package.json'), 'utf8'),
 )
+const packageSpecifier = process.env.CONSUMER_PACKAGE_SPEC
+if (packageSpecifier !== undefined) {
+    assert.equal(packageSpecifier, `${manifest.name}@${manifest.version}`)
+}
 function playgroundDependency(name) {
     const version =
         playground.devDependencies?.[name] ?? playground.dependencies?.[name]
@@ -70,6 +74,7 @@ try {
         npm(
             [
                 'pack',
+                ...(packageSpecifier ? [packageSpecifier] : []),
                 '--ignore-scripts',
                 '--pack-destination',
                 temporaryRoot,
@@ -79,6 +84,8 @@ try {
         ),
     )
     assert.equal(packed.length, 1)
+    assert.equal(packed[0].name, manifest.name)
+    assert.equal(packed[0].version, manifest.version)
     mkdirSync(consumerRoot)
     const reactVersion = process.env.CONSUMER_REACT_VERSION
     const dependencies = {

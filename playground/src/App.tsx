@@ -26,6 +26,7 @@ export function App() {
         >
             <div className="technical-grid min-h-screen bg-bench-paper py-7 text-bench-ink transition-colors duration-200 dark:bg-[#07111b] dark:text-bench-paper">
                 <TooltipProvider
+                    customDesign={playgroundDesign}
                     delayDuration={state.delayDuration}
                     skipDelayDuration={250}
                     disableHoverableContent={state.disableHoverableContent}
@@ -239,7 +240,6 @@ export function App() {
                                             portalContainer={
                                                 state.portalContainer
                                             }
-                                            customDesign={playgroundDesign}
                                         >
                                             <button
                                                 data-testid="provider-trigger"
@@ -263,7 +263,6 @@ export function App() {
                                             portalContainer={
                                                 state.portalContainer
                                             }
-                                            customDesign={playgroundDesign}
                                         >
                                             <button
                                                 data-testid="disabled-trigger"
@@ -290,7 +289,6 @@ export function App() {
                                             portalContainer={
                                                 state.portalContainer
                                             }
-                                            customDesign={playgroundDesign}
                                         >
                                             <button
                                                 data-testid="accidentally-enabled-trigger"
@@ -311,6 +309,85 @@ export function App() {
                             </section>
                         </div>
 
+                        <section
+                            aria-labelledby="design-title"
+                            className="border-t border-bench-steel bg-bench-paper px-8 py-5 dark:border-[#385064] dark:bg-[#122638]"
+                        >
+                            <h2
+                                id="design-title"
+                                className={sectionHeadingClasses}
+                            >
+                                Global design and scoped overrides
+                            </h2>
+                            <p className="mt-2 text-sm text-[#526674] dark:text-bench-steel">
+                                These tooltips share the provider's base and
+                                animation. Each scope overrides only its own
+                                content or arrow classes.
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-4">
+                                <CustomTooltip
+                                    content="Local content classes with the shared base and arrow."
+                                    customDesign={{
+                                        contentClasses: 'text-sm font-semibold',
+                                    }}
+                                    portalContainer={state.portalContainer}
+                                >
+                                    <button
+                                        type="button"
+                                        data-testid="local-design-trigger"
+                                        className="border border-bench-ink bg-white px-4 py-3 text-bench-ink dark:bg-[#142b3d] dark:text-bench-paper"
+                                    >
+                                        Local content override
+                                    </button>
+                                </CustomTooltip>
+                                <TooltipProvider
+                                    customDesign={{
+                                        contentClasses: 'text-base italic',
+                                    }}
+                                    delayDuration={0}
+                                    skipDelayDuration={0}
+                                    disableHoverableContent
+                                >
+                                    <CustomTooltip
+                                        content="Nested content classes with the shared base and arrow."
+                                        portalContainer={state.portalContainer}
+                                    >
+                                        <button
+                                            type="button"
+                                            data-testid="nested-design-trigger"
+                                            className="border border-bench-ink bg-white px-4 py-3 text-bench-ink dark:bg-[#142b3d] dark:text-bench-paper"
+                                        >
+                                            Nested provider design
+                                        </button>
+                                    </CustomTooltip>
+                                    <TooltipProvider
+                                        customDesign={{
+                                            arrowClasses: 'fill-bench-orange',
+                                        }}
+                                    >
+                                        <CustomTooltip
+                                            content="Local content and a nested arrow override."
+                                            customDesign={{
+                                                contentClasses:
+                                                    'text-lg font-bold',
+                                            }}
+                                            portalContainer={
+                                                state.portalContainer
+                                            }
+                                        >
+                                            <button
+                                                type="button"
+                                                data-testid="nested-local-design-trigger"
+                                                className="border border-bench-ink bg-white px-4 py-3 text-bench-ink dark:bg-[#142b3d] dark:text-bench-paper"
+                                            >
+                                                Nested local override
+                                            </button>
+                                        </CustomTooltip>
+                                    </TooltipProvider>
+                                </TooltipProvider>
+                            </div>
+                        </section>
+
                         <section className="flex min-h-[90px] items-center border-t border-bench-steel bg-bench-paper px-8 py-5 dark:border-[#385064] dark:bg-[#122638]">
                             <div>
                                 <h2 className={sectionHeadingClasses}>
@@ -327,6 +404,15 @@ export function App() {
                 </TooltipProvider>
 
                 <div className="mx-auto mb-5 flex w-[calc(100%-2rem)] max-w-[1180px] flex-wrap items-center justify-center gap-5 border border-t-0 border-bench-steel bg-[#dce5ea] p-5 max-[800px]:w-[calc(100%-1.25rem)] max-[800px]:max-w-[620px] dark:border-[#385064] dark:bg-[#0a1824]">
+                    <CustomTooltip content="Default design without a provider.">
+                        <button
+                            type="button"
+                            data-testid="default-design-trigger"
+                            className="border border-bench-ink bg-white px-4 py-3 text-bench-ink dark:bg-[#142b3d] dark:text-bench-paper"
+                        >
+                            Default tooltip design
+                        </button>
+                    </CustomTooltip>
                     <CustomTooltip
                         content="No surrounding provider required."
                         side="top"

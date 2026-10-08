@@ -47,6 +47,52 @@ export function App() {
 }
 ```
 
+## Global design and local overrides
+
+Configure shared classes once on the native `TooltipProvider`:
+
+```tsx
+import { CustomTooltip, TooltipProvider } from '@rentnerkev/tooltips'
+import type { TooltipCustomDesign } from '@rentnerkev/tooltips'
+
+const tooltipDesign = {
+    baseClasses:
+        'rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white shadow-lg',
+    arrowClasses: 'fill-slate-900',
+} satisfies TooltipCustomDesign
+
+export function Actions() {
+    return (
+        <TooltipProvider customDesign={tooltipDesign} delayDuration={200}>
+            <CustomTooltip content="Uses the shared design">
+                <button type="button">Save</button>
+            </CustomTooltip>
+            <CustomTooltip
+                content="Overrides only the content classes"
+                customDesign={{ contentClasses: 'font-semibold' }}
+            >
+                <button type="button">Publish</button>
+            </CustomTooltip>
+            <TooltipProvider customDesign={{ contentClasses: 'text-center' }}>
+                <CustomTooltip content="Inherits the shared base and arrow">
+                    <button type="button">Details</button>
+                </CustomTooltip>
+            </TooltipProvider>
+        </TooltipProvider>
+    )
+}
+```
+
+Design properties resolve in this order: package defaults, outer provider,
+nested providers, then the tooltip's local `customDesign`. Only supplied
+properties replace inherited values; each class string replaces that entire
+property. Use `''` to clear a property's classes. Without `customDesign`, the
+existing default and standalone behavior remains available.
+
+Nested providers scope design overrides while sharing the outer Radix provider,
+opening delay, skip-delay window, and hover behavior. Use a tooltip's own
+`delayDuration` for a local timing override.
+
 ## Screenshots
 
 |                                                                                                                                                                                                                                                                                                                                   |                                                                                                                                                                                                                                                                                                                         |
@@ -61,4 +107,4 @@ bun install --cwd playground
 bun run playground:dev
 ```
 
-[Full API and usage guide](https://npm.rentner.dev/docs/tooltips) · [Local Playground](./playground) · [MIT license](./LICENSE)
+[Full API and usage guide](https://npm.rentner.dev/docs/tooltips) · [Local Playground](./playground) · [Changelog](./docs/changelog.md) · [MIT license](./LICENSE)

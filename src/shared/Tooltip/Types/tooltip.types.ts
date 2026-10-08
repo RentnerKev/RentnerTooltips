@@ -15,6 +15,7 @@ export interface TooltipCustomDesign {
 
 export interface TooltipProviderProps {
     children: ReactNode
+    customDesign?: TooltipCustomDesign
     delayDuration?: RadixTooltipProviderProps['delayDuration']
     skipDelayDuration?: RadixTooltipProviderProps['skipDelayDuration']
     disableHoverableContent?: RadixTooltipProviderProps['disableHoverableContent']

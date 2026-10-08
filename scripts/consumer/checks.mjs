@@ -1,10 +1,33 @@
 export async function check({ page, expect }) {
+    const visibleContent = page.locator(
+        '[data-radix-popper-content-wrapper] > [data-state]',
+    )
+    /* eslint-disable no-await-in-loop -- Each trigger changes the visible tooltip. */
+    for (const [id, contentClasses, arrowClasses] of [
+        ['consumer-local-design', 'text-lg italic', 'fill-orange-500'],
+        ['consumer-nested-design', 'text-sm font-semibold', 'fill-blue-500'],
+    ]) {
+        await page.getByTestId(id).focus()
+        await expect(visibleContent).toBeVisible()
+        await expect(visibleContent).toHaveClass(new RegExp(contentClasses))
+        await expect(visibleContent.locator('svg')).toHaveClass(arrowClasses)
+        if (id === 'consumer-local-design') {
+            await expect(visibleContent).not.toHaveClass(
+                /text-sm|font-semibold/,
+            )
+        }
+        await page.keyboard.press('Escape')
+        await expect(visibleContent).toBeHidden()
+    }
+    /* eslint-enable no-await-in-loop */
     await page.getByRole('button', { name: 'Show help' }).hover()
     const help = page.getByRole('tooltip', {
         name: 'Consumer help',
         exact: true,
     })
     await expect(help).toBeVisible()
+    await expect(visibleContent).toHaveClass(/text-sm font-semibold/)
+    await expect(visibleContent.locator('svg')).toHaveClass('fill-orange-500')
     expect(
         await help.evaluate((node) =>
             parseFloat(getComputedStyle(node).paddingLeft),

@@ -2,6 +2,7 @@ import { useContext, useCallback, useEffect, useRef, useState } from 'react'
 import type { FocusEvent, PointerEvent } from 'react'
 import { defaultTooltipDesign } from '../../../config/tooltip.config.ts'
 import {
+    TooltipDesignContext,
     TooltipProviderDepthContext,
     TooltipHoverableContentContext,
 } from '../TooltipContext.ts'
@@ -20,10 +21,15 @@ export function useCustomTooltipLogic({
     customDesign,
 }: CustomTooltipLogicProps): CustomTooltipLogicResult {
     const providerDepth = useContext(TooltipProviderDepthContext)
+    const inheritedDesign = useContext(TooltipDesignContext)
     const inheritedDisableHoverableContent = useContext(
         TooltipHoverableContentContext,
     )
-    const design = { ...defaultTooltipDesign, ...customDesign }
+    const design = {
+        ...defaultTooltipDesign,
+        ...inheritedDesign,
+        ...customDesign,
+    }
     const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false)
     if (disabled && internalOpen !== (defaultOpen ?? false)) {
         setInternalOpen(defaultOpen ?? false)

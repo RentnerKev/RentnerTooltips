@@ -2,9 +2,57 @@ import { describe, expect, test } from 'bun:test'
 import { useContext } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as publicApi from '../../../index.ts'
+import { defaultTooltipDesign } from '../../../config/tooltip.config.ts'
+import { useCustomTooltipLogic } from '../../../shared/Tooltip/Hooks/useCustomTooltipLogic.ts'
+import type { TooltipCustomDesign } from '../../../shared/Tooltip/Types/tooltip.types.ts'
 import { CustomTooltip } from '../../../shared/Tooltip/Components/CustomTooltip.tsx'
 import { TooltipProvider } from '../../../shared/Tooltip/Components/TooltipProvider.tsx'
-import { TooltipProviderDepthContext } from '../../../shared/Tooltip/TooltipContext.ts'
+import {
+    TooltipHoverableContentContext,
+    TooltipProviderDepthContext,
+} from '../../../shared/Tooltip/TooltipContext.ts'
+
+function DesignProbe({
+    id,
+    customDesign,
+}: {
+    id: string
+    customDesign?: TooltipCustomDesign
+}) {
+    const { state } = useCustomTooltipLogic({ customDesign })
+    const disableHoverableContent = useContext(TooltipHoverableContentContext)
+
+    return (
+        <output data-testid={id}>
+            {JSON.stringify({
+                ...state.design,
+                providerDepth: state.providerDepth,
+                disableHoverableContent,
+            })}
+        </output>
+    )
+}
+
+function expectDesign(
+    markup: string,
+    id: string,
+    customDesign: TooltipCustomDesign = {},
+    providerDepth = 1,
+    disableHoverableContent?: boolean,
+) {
+    expect(markup).toContain(
+        renderToStaticMarkup(
+            <output data-testid={id}>
+                {JSON.stringify({
+                    ...defaultTooltipDesign,
+                    ...customDesign,
+                    providerDepth,
+                    disableHoverableContent,
+                })}
+            </output>,
+        ),
+    )
+}
 
 function ProviderDepthProbe() {
     const providerDepth = useContext(TooltipProviderDepthContext)
@@ -13,6 +61,87 @@ function ProviderDepthProbe() {
 }
 
 describe('tooltip API', () => {
+    test('resolves defaults, provider inheritance, field replacements, and isolated siblings without mutating designs', () => {
+        const defaults = { ...defaultTooltipDesign }
+        const outer = Object.freeze({
+            baseClasses: 'rounded-xl bg-black',
+            contentClasses: 'text-sm',
+            arrowClasses: 'fill-black',
+        })
+        const nested = Object.freeze({ contentClasses: 'text-base' })
+        const local = Object.freeze({ contentClasses: '' })
+        const markup = renderToStaticMarkup(
+            <>
+                <DesignProbe id="default" />
+                <TooltipProvider
+                    customDesign={outer}
+                    disableHoverableContent={false}
+                >
+                    <DesignProbe id="global" />
+                    <DesignProbe id="local" customDesign={local} />
+                    <TooltipProvider
+                        customDesign={nested}
+                        disableHoverableContent
+                    >
+                        <DesignProbe id="nested" />
+                        <TooltipProvider
+                            customDesign={{ arrowClasses: 'fill-orange-500' }}
+                        >
+                            <DesignProbe
+                                id="deep"
+                                customDesign={{ contentClasses: 'text-lg' }}
+                            />
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <DesignProbe id="no-design" />
+                        </TooltipProvider>
+                    </TooltipProvider>
+                    <DesignProbe id="sibling" />
+                </TooltipProvider>
+                <TooltipProvider>
+                    <DesignProbe id="separate-provider" />
+                </TooltipProvider>
+                <DesignProbe
+                    id="standalone"
+                    customDesign={{ animationClasses: '', arrowClasses: '' }}
+                />
+            </>,
+        )
+
+        expectDesign(markup, 'default', {}, 0)
+        expectDesign(markup, 'global', outer, 1, false)
+        expectDesign(markup, 'local', { ...outer, ...local }, 1, false)
+        expectDesign(markup, 'nested', { ...outer, ...nested }, 1, false)
+        expectDesign(
+            markup,
+            'deep',
+            {
+                ...outer,
+                contentClasses: 'text-lg',
+                arrowClasses: 'fill-orange-500',
+            },
+            1,
+            false,
+        )
+        expectDesign(markup, 'no-design', { ...outer, ...nested }, 1, false)
+        expectDesign(markup, 'sibling', outer, 1, false)
+        expectDesign(markup, 'separate-provider')
+        expectDesign(
+            markup,
+            'standalone',
+            { animationClasses: '', arrowClasses: '' },
+            0,
+        )
+        expect(defaultTooltipDesign).toEqual(defaults)
+        expect(outer).toEqual({
+            baseClasses: 'rounded-xl bg-black',
+            contentClasses: 'text-sm',
+            arrowClasses: 'fill-black',
+        })
+        expect(nested).toEqual({ contentClasses: 'text-base' })
+        expect(local).toEqual({ contentClasses: '' })
+    })
+
     test('exposes the intended runtime API', () => {
         expect(Object.keys(publicApi).toSorted()).toEqual([
             'CustomTooltip',
