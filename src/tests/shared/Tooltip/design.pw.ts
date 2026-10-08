@@ -73,7 +73,9 @@ test.describe('provider tooltip designs', () => {
         await expect(content).toBeVisible()
         await content.hover()
         await expect(content).toBeVisible()
-        await page.mouse.move(0, 0)
+        // Radix creates a grace area on pointerleave and tracks subsequent moves.
+        // Cross its boundary instead of teleporting to the final leave point.
+        await page.mouse.move(16, 16, { steps: 12 })
         await expect(content).toBeHidden()
     })
 
