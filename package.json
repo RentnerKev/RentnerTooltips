@@ -25,7 +25,9 @@
     "type": "module",
     "files": [
         "dist",
-        "tailwind.css"
+        "tailwind.css",
+        "README.md",
+        "docs/usage.md"
     ],
     "sideEffects": [
         "./tailwind.css"
@@ -85,7 +87,11 @@
             "import": "./dist/types.js",
             "default": "./dist/types.js"
         },
-        "./package.json": "./package.json"
+        "./package.json": "./package.json",
+        "./ai": {
+            "types": "./dist/ai.d.ts",
+            "import": "./dist/ai.js"
+        }
     },
     "publishConfig": {
         "access": "public"

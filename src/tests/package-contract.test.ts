@@ -38,6 +38,7 @@ describe('published package contract', () => {
                 default: './dist/types.js',
             },
             './package.json': './package.json',
+            './ai': { types: './dist/ai.d.ts', import: './dist/ai.js' },
         })
     })
 
