@@ -1,7 +1,6 @@
 import type { FocusEventHandler, PointerEventHandler } from 'react'
-import type { TooltipCustomDesign } from './tooltip.types.js'
+import type { TooltipCustomDesign, TooltipProps } from './tooltip.types.ts'
 export interface FocusSettlement {
-    trigger: HTMLElement
     view: Window
     frame: number
     onScroll: (event: Event) => void
@@ -20,3 +19,13 @@ export interface CustomTooltipLogicResult {
         handlePointerLeave: PointerEventHandler<HTMLElement>
     }
 }
+
+export type CustomTooltipLogicProps = Pick<
+    TooltipProps,
+    | 'open'
+    | 'defaultOpen'
+    | 'onOpenChange'
+    | 'disabled'
+    | 'disableHoverableContent'
+    | 'customDesign'
+>

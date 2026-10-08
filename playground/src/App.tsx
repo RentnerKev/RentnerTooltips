@@ -1,14 +1,14 @@
 import { CustomTooltip, TooltipProvider } from '@rentnerkev/tooltips'
-import { usePlaygroundLogic } from './Hooks/usePlaygroundLogic.js'
-import { ToggleRow } from './Components/ToggleRow.js'
-import { SignalRow } from './Components/SignalRow.js'
-import { BoundaryProbe } from './Components/BoundaryProbe.js'
+import { usePlaygroundLogic } from './Hooks/usePlaygroundLogic.ts'
+import { ToggleRow } from './Components/ToggleRow.tsx'
+import { SignalRow } from './Components/SignalRow.tsx'
+import { BoundaryProbe } from './Components/BoundaryProbe.tsx'
 import {
     playgroundDesign,
     sectionHeadingClasses,
     fieldDividerClasses,
     targetCaptionClasses,
-} from './config/playground.config.js'
+} from './config/playground.config.ts'
 
 export function App() {
     const {

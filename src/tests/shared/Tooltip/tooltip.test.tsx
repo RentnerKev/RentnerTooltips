@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import { useContext } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import * as publicApi from '../../../index.js'
-import { CustomTooltip } from '../../../shared/Tooltip/Components/CustomTooltip.js'
-import { TooltipProvider } from '../../../shared/Tooltip/Components/TooltipProvider.js'
-import { TooltipProviderDepthContext } from '../../../shared/Tooltip/TooltipContext.js'
+import * as publicApi from '../../../index.ts'
+import { CustomTooltip } from '../../../shared/Tooltip/Components/CustomTooltip.tsx'
+import { TooltipProvider } from '../../../shared/Tooltip/Components/TooltipProvider.tsx'
+import { TooltipProviderDepthContext } from '../../../shared/Tooltip/TooltipContext.ts'
 
 function ProviderDepthProbe() {
     const providerDepth = useContext(TooltipProviderDepthContext)

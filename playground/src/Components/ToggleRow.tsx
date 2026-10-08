@@ -1,5 +1,5 @@
-import { fieldDividerClasses } from '../config/playground.config.js'
-import type { ToggleRowProps } from '../Types/playground.types.js'
+import { fieldDividerClasses } from '../config/playground.config.ts'
+import type { ToggleRowProps } from '../Types/playground.types.ts'
 
 export function ToggleRow({
     checked,

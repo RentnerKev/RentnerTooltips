@@ -1,15 +1,15 @@
 import { useContext, useCallback, useEffect, useRef, useState } from 'react'
 import type { FocusEvent, PointerEvent } from 'react'
-import { defaultTooltipDesign } from '../../../config/tooltip.config.js'
+import { defaultTooltipDesign } from '../../../config/tooltip.config.ts'
 import {
     TooltipProviderDepthContext,
     TooltipHoverableContentContext,
-} from '../TooltipContext.js'
-import type { TooltipProps } from '../Types/tooltip.types.js'
+} from '../TooltipContext.ts'
 import type {
     FocusSettlement,
     CustomTooltipLogicResult,
-} from '../Types/custom-tooltip-logic.types.js'
+    CustomTooltipLogicProps,
+} from '../Types/custom-tooltip-logic.types.ts'
 
 export function useCustomTooltipLogic({
     open,
@@ -18,7 +18,7 @@ export function useCustomTooltipLogic({
     disabled,
     disableHoverableContent,
     customDesign,
-}: TooltipProps): CustomTooltipLogicResult {
+}: CustomTooltipLogicProps): CustomTooltipLogicResult {
     const providerDepth = useContext(TooltipProviderDepthContext)
     const inheritedDisableHoverableContent = useContext(
         TooltipHoverableContentContext,
@@ -72,7 +72,6 @@ export function useCustomTooltipLogic({
         if (!view) return
 
         const pending: FocusSettlement = {
-            trigger,
             view,
             frame: 0,
             onScroll(scrollEvent) {

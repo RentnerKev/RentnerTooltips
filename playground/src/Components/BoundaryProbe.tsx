@@ -1,6 +1,6 @@
 import { CustomTooltip } from '@rentnerkev/tooltips'
-import { playgroundDesign } from '../config/playground.config.js'
-import type { ProbeProps } from '../Types/playground.types.js'
+import { playgroundDesign } from '../config/playground.config.ts'
+import type { ProbeProps } from '../Types/playground.types.ts'
 
 export function BoundaryProbe({
     label,

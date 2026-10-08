@@ -1,10 +1,10 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-import type { TooltipProviderProps } from '../Types/tooltip.types.js'
+import type { TooltipProviderProps } from '../Types/tooltip.types.ts'
 import {
     TooltipProviderDepthContext,
     TooltipHoverableContentContext,
-} from '../TooltipContext.js'
-import { useTooltipProviderLogic } from '../Hooks/useTooltipProviderLogic.js'
+} from '../TooltipContext.ts'
+import { useTooltipProviderLogic } from '../Hooks/useTooltipProviderLogic.ts'
 
 export function TooltipProvider({
     children,

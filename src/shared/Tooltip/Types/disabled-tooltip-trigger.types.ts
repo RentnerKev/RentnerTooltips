@@ -41,11 +41,5 @@ export interface DisabledTooltipTriggerLogicResult {
         labelledBy?: string
         isButton: boolean
     }
-    handler: {
-        handlePreventChildActivation: (event: {
-            preventDefault(): void
-            stopPropagation(): void
-        }) => void
-    }
     refs: { setWrapperRef: RefCallback<HTMLSpanElement> }
 }

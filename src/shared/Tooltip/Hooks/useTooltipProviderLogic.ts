@@ -1,6 +1,6 @@
 import { useContext } from 'react'
-import { TooltipProviderDepthContext } from '../TooltipContext.js'
-import type { TooltipProviderLogicResult } from '../Types/tooltip-provider-logic.types.js'
+import { TooltipProviderDepthContext } from '../TooltipContext.ts'
+import type { TooltipProviderLogicResult } from '../Types/tooltip-provider-logic.types.ts'
 export function useTooltipProviderLogic(): TooltipProviderLogicResult {
     const providerDepth = useContext(TooltipProviderDepthContext)
     return {

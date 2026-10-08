@@ -1,8 +1,8 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-import { DisabledTooltipTrigger } from './DisabledTooltipTrigger.js'
-import { TooltipProvider } from './TooltipProvider.js'
-import type { TooltipProps } from '../Types/tooltip.types.js'
-import { useCustomTooltipLogic } from '../Hooks/useCustomTooltipLogic.js'
+import { DisabledTooltipTrigger } from './DisabledTooltipTrigger.tsx'
+import { TooltipProvider } from './TooltipProvider.tsx'
+import type { TooltipProps } from '../Types/tooltip.types.ts'
+import { useCustomTooltipLogic } from '../Hooks/useCustomTooltipLogic.ts'
 
 export function CustomTooltip({
     children,
@@ -29,8 +29,6 @@ export function CustomTooltip({
     customDesign,
 }: TooltipProps) {
     const { state, handler } = useCustomTooltipLogic({
-        children,
-        content,
         disabled,
         open,
         defaultOpen,

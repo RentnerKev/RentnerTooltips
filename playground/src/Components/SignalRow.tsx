@@ -1,4 +1,4 @@
-import type { SignalRowProps } from '../Types/playground.types.js'
+import type { SignalRowProps } from '../Types/playground.types.ts'
 
 export function SignalRow({ label, value }: SignalRowProps) {
     return (

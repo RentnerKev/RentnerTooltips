@@ -1,11 +1,12 @@
-import type { RootObserver } from './Types/native-label-observer.types.js'
+import type {
+    GeneratedLabelId,
+    RootElementLookup,
+    RootObserver,
+} from './Types/native-label-observer.types.ts'
 
 // DOM roots own these subscriptions; no observer is created during SSR.
 const rootObservers = new WeakMap<Node, RootObserver>()
-const generatedLabelIds = new WeakMap<
-    HTMLLabelElement,
-    { id: string; owners: Set<object> }
->()
+const generatedLabelIds = new WeakMap<HTMLLabelElement, GeneratedLabelId>()
 
 function affectsLabels(record: MutationRecord) {
     if (record.type === 'attributes') return true
@@ -107,8 +108,6 @@ export function releaseNativeLabelId(label: HTMLLabelElement, owner: object) {
 
 export function getRootElementById(root: Node | undefined, id: string) {
     if (!root) return null
-    const rootWithIdLookup = root as Node & {
-        getElementById?: (elementId: string) => Element | null
-    }
+    const rootWithIdLookup = root as RootElementLookup
     return rootWithIdLookup.getElementById?.(id) ?? null
 }

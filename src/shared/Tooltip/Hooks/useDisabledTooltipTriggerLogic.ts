@@ -1,16 +1,23 @@
-import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react'
+import {
+    cloneElement,
+    useCallback,
+    useId,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react'
 import type { ForwardedRef, ReactElement } from 'react'
 import {
     getRootElementById,
     releaseNativeLabelId,
     retainNativeLabelId,
     subscribeNativeLabels,
-} from '../../../lib/Tooltip/nativeLabelObserver.js'
+} from '../../../lib/Tooltip/nativeLabelObserver.ts'
 import type {
     DisabledTriggerChildProps,
     DisabledTooltipTriggerProps,
     DisabledTooltipTriggerLogicResult,
-} from '../Types/disabled-tooltip-trigger.types.js'
+} from '../Types/disabled-tooltip-trigger.types.ts'
 
 const nativeDisableableElements = new Set([
     'button',
@@ -151,7 +158,16 @@ export function useDisabledTooltipTriggerLogic(
 
     return {
         state: {
-            disabledChild,
+            disabledChild: cloneElement(disabledChild, {
+                disabled: true,
+                contentEditable: false,
+                draggable: false,
+                onClick: preventChildActivation,
+                onKeyDown: preventChildActivation,
+                onKeyUp: preventChildActivation,
+                style: { ...disabledChild.props.style, pointerEvents: 'none' },
+                tabIndex: -1,
+            }),
             wrapperClassName,
             ariaDescription,
             ariaDescribedBy,
@@ -159,7 +175,6 @@ export function useDisabledTooltipTriggerLogic(
             labelledBy,
             isButton,
         },
-        handler: { handlePreventChildActivation: preventChildActivation },
         refs: { setWrapperRef },
     }
 }

@@ -1,6 +1,6 @@
-import { cloneElement, forwardRef } from 'react'
-import type { DisabledTooltipTriggerProps } from '../Types/disabled-tooltip-trigger.types.js'
-import { useDisabledTooltipTriggerLogic } from '../Hooks/useDisabledTooltipTriggerLogic.js'
+import { forwardRef } from 'react'
+import type { DisabledTooltipTriggerProps } from '../Types/disabled-tooltip-trigger.types.ts'
+import { useDisabledTooltipTriggerLogic } from '../Hooks/useDisabledTooltipTriggerLogic.ts'
 
 export const DisabledTooltipTrigger = forwardRef<
     HTMLSpanElement,
@@ -11,7 +11,6 @@ export const DisabledTooltipTrigger = forwardRef<
 ) {
     const {
         state,
-        handler,
         refs: { setWrapperRef },
     } = useDisabledTooltipTriggerLogic(
         { children, className, ...triggerProps },
@@ -31,19 +30,7 @@ export const DisabledTooltipTrigger = forwardRef<
             data-tooltip-disabled-trigger=""
             className={state.wrapperClassName}
         >
-            {cloneElement(state.disabledChild, {
-                disabled: true,
-                contentEditable: false,
-                draggable: false,
-                onClick: handler.handlePreventChildActivation,
-                onKeyDown: handler.handlePreventChildActivation,
-                onKeyUp: handler.handlePreventChildActivation,
-                style: {
-                    ...state.disabledChild.props.style,
-                    pointerEvents: 'none',
-                },
-                tabIndex: -1,
-            })}
+            {state.disabledChild}
         </span>
     )
 })

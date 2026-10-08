@@ -3,7 +3,7 @@ import type { ChangeEvent } from 'react'
 import type {
     PlaygroundTooltipSide,
     PlaygroundLogicResult,
-} from '../Types/playground.types.js'
+} from '../Types/playground.types.ts'
 
 export function usePlaygroundLogic(): PlaygroundLogicResult {
     const [controlledOpen, setControlledOpen] = useState(false)

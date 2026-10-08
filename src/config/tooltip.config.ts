@@ -1,4 +1,4 @@
-import type { TooltipCustomDesign } from '../shared/Tooltip/Types/tooltip.types.js'
+import type { TooltipCustomDesign } from '../shared/Tooltip/Types/tooltip.types.ts'
 
 export const defaultTooltipDesign: Required<TooltipCustomDesign> = {
     baseClasses:
