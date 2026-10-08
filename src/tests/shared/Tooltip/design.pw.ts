@@ -37,7 +37,9 @@ test.describe('provider tooltip designs', () => {
 
         /* eslint-disable no-await-in-loop -- Each trigger owns the one visible tooltip. */
         for (const [id, design] of cases) {
-            await page.getByTestId(id).focus()
+            const trigger = page.getByTestId(id)
+            await trigger.scrollIntoViewIfNeeded()
+            await trigger.hover()
             await expect(content).toBeVisible()
             await expect(content).toHaveClass(
                 `z-[9999] ${design.baseClasses} ${design.animationClasses} ${design.contentClasses}`,
