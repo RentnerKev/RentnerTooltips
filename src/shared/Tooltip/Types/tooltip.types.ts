@@ -13,25 +13,15 @@ export interface TooltipCustomDesign {
     arrowClasses?: string
 }
 
-export interface TooltipProviderProps {
-    children: ReactNode
-    customDesign?: TooltipCustomDesign
-    delayDuration?: RadixTooltipProviderProps['delayDuration']
-    skipDelayDuration?: RadixTooltipProviderProps['skipDelayDuration']
-    disableHoverableContent?: RadixTooltipProviderProps['disableHoverableContent']
+/** Visual slots replace their defaults; positioning and accessibility stay intact. */
+export interface TooltipClassNames {
+    content?: string
+    animation?: string
+    arrow?: string
+    disabledTrigger?: string
 }
 
-export interface TooltipProps {
-    children: ReactElement
-    content: ReactNode
-    disabled?: boolean
-    disabledTrigger?: boolean
-    disabledTriggerClassName?: string
-    open?: RadixTooltipRootProps['open']
-    defaultOpen?: RadixTooltipRootProps['defaultOpen']
-    onOpenChange?: RadixTooltipRootProps['onOpenChange']
-    delayDuration?: RadixTooltipRootProps['delayDuration']
-    disableHoverableContent?: RadixTooltipRootProps['disableHoverableContent']
+export interface TooltipDefaults {
     side?: RadixTooltipContentProps['side']
     sideOffset?: RadixTooltipContentProps['sideOffset']
     align?: RadixTooltipContentProps['align']
@@ -43,5 +33,32 @@ export interface TooltipProps {
     sticky?: RadixTooltipContentProps['sticky']
     hideWhenDetached?: RadixTooltipContentProps['hideWhenDetached']
     portalContainer?: RadixTooltipPortalProps['container']
+    portalClassName?: string
+    portalZIndex?: number
+    size?: 'sm' | 'md' | 'lg'
+    showArrow?: boolean
+}
+
+export interface TooltipProviderProps extends TooltipDefaults {
+    children: ReactNode
     customDesign?: TooltipCustomDesign
+    classNames?: TooltipClassNames
+    delayDuration?: RadixTooltipProviderProps['delayDuration']
+    skipDelayDuration?: RadixTooltipProviderProps['skipDelayDuration']
+    disableHoverableContent?: RadixTooltipProviderProps['disableHoverableContent']
+}
+
+export interface TooltipProps extends TooltipDefaults {
+    children: ReactElement
+    content: ReactNode
+    disabled?: boolean
+    disabledTrigger?: boolean
+    disabledTriggerClassName?: string
+    open?: RadixTooltipRootProps['open']
+    defaultOpen?: RadixTooltipRootProps['defaultOpen']
+    onOpenChange?: RadixTooltipRootProps['onOpenChange']
+    delayDuration?: RadixTooltipRootProps['delayDuration']
+    disableHoverableContent?: RadixTooltipRootProps['disableHoverableContent']
+    customDesign?: TooltipCustomDesign
+    classNames?: TooltipClassNames
 }

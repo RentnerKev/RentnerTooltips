@@ -1,5 +1,7 @@
 export type {
     TooltipCustomDesign,
+    TooltipClassNames,
+    TooltipDefaults,
     TooltipProviderProps,
     TooltipProps,
 } from './shared/Tooltip/Types/tooltip.types.ts'

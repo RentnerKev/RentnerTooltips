@@ -29,6 +29,7 @@ export interface DisabledTooltipTriggerProps extends Omit<
     'children'
 > {
     children: ReactElement
+    visualClassName?: string
 }
 
 export interface DisabledTooltipTriggerLogicResult {

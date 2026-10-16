@@ -1,3 +1,4 @@
+import { DefaultsExamples } from './Components/DefaultsExamples.tsx'
 import { CustomTooltip, TooltipProvider } from '@rentnerkev/tooltips'
 import { usePlaygroundLogic } from './Hooks/usePlaygroundLogic.ts'
 import { ToggleRow } from './Components/ToggleRow.tsx'
@@ -497,6 +498,7 @@ export function App() {
                     </div>
                 </section>
             </div>
+            <DefaultsExamples />
         </div>
     )
 }

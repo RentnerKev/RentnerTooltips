@@ -7,52 +7,29 @@ import { useCustomTooltipLogic } from '../Hooks/useCustomTooltipLogic.ts'
 export function CustomTooltip({
     children,
     content,
-    disabled = false,
     disabledTrigger = false,
     disabledTriggerClassName,
-    open,
-    defaultOpen,
-    onOpenChange,
     delayDuration,
-    disableHoverableContent,
-    side = 'top',
-    sideOffset = 8,
-    align,
-    alignOffset,
-    avoidCollisions,
-    collisionBoundary,
-    collisionPadding,
-    arrowPadding,
-    sticky,
-    hideWhenDetached,
-    portalContainer,
-    customDesign,
+    ...props
 }: TooltipProps) {
-    const { state, handler } = useCustomTooltipLogic({
-        disabled,
-        open,
-        defaultOpen,
-        onOpenChange,
-        disableHoverableContent,
-        customDesign,
-    })
-
-    if (disabled) return children
-
+    const { state, handler } = useCustomTooltipLogic(props)
+    if (props.disabled) return children
     const trigger = disabledTrigger ? (
-        <DisabledTooltipTrigger className={disabledTriggerClassName}>
+        <DisabledTooltipTrigger
+            className={disabledTriggerClassName}
+            visualClassName={state.classNames.disabledTrigger}
+        >
             {children}
         </DisabledTooltipTrigger>
     ) : (
         children
     )
-
     const tooltip = (
         <TooltipPrimitive.Root
             open={state.isOpen}
             onOpenChange={handler.handleOpenChange}
             delayDuration={delayDuration}
-            disableHoverableContent={disableHoverableContent}
+            disableHoverableContent={props.disableHoverableContent}
         >
             <TooltipPrimitive.Trigger
                 asChild
@@ -64,33 +41,46 @@ export function CustomTooltip({
             >
                 {trigger}
             </TooltipPrimitive.Trigger>
-            <TooltipPrimitive.Portal container={portalContainer}>
+            <TooltipPrimitive.Portal container={state.defaults.portalContainer}>
                 <TooltipPrimitive.Content
                     onEscapeKeyDown={handler.handleDismissal}
                     onPointerDownOutside={handler.handleDismissal}
-                    side={side}
-                    sideOffset={sideOffset}
-                    align={align}
-                    alignOffset={alignOffset}
-                    avoidCollisions={avoidCollisions}
-                    collisionBoundary={collisionBoundary}
-                    collisionPadding={collisionPadding}
-                    arrowPadding={arrowPadding}
-                    sticky={sticky}
-                    hideWhenDetached={hideWhenDetached}
-                    className={`z-[9999] ${state.design.baseClasses} ${state.design.animationClasses} ${state.design.contentClasses}`}
+                    side={state.defaults.side ?? 'top'}
+                    sideOffset={state.defaults.sideOffset ?? 8}
+                    align={state.defaults.align}
+                    alignOffset={state.defaults.alignOffset}
+                    avoidCollisions={state.defaults.avoidCollisions}
+                    collisionBoundary={state.defaults.collisionBoundary}
+                    collisionPadding={state.defaults.collisionPadding}
+                    arrowPadding={state.defaults.arrowPadding}
+                    sticky={state.defaults.sticky}
+                    hideWhenDetached={state.defaults.hideWhenDetached}
+                    className={[
+                        'z-[var(--rentner-tooltip-z,9999)]',
+                        state.contentClassName,
+                        state.animationClassName,
+                        state.defaults.portalClassName,
+                    ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    style={
+                        state.defaults.portalZIndex === undefined
+                            ? undefined
+                            : { zIndex: state.defaults.portalZIndex }
+                    }
                 >
                     {content}
-                    <TooltipPrimitive.Arrow
-                        width={12}
-                        height={6}
-                        className={state.design.arrowClasses}
-                    />
+                    {state.defaults.showArrow !== false && (
+                        <TooltipPrimitive.Arrow
+                            width={12}
+                            height={6}
+                            className={state.arrowClassName}
+                        />
+                    )}
                 </TooltipPrimitive.Content>
             </TooltipPrimitive.Portal>
         </TooltipPrimitive.Root>
     )
-
     return state.providerDepth > 0 ? (
         tooltip
     ) : (

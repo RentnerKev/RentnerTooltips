@@ -350,3 +350,50 @@ information, API declarations, usage guides, examples, and search, without
 accounts, write operations, or access to private project files. The installed
 `/ai` entry works locally without that service. Always use the documentation and
 declarations for the version installed in your project.
+
+## Provider defaults and shared theme
+
+Configure repeated positioning once on `TooltipProvider`: side, sideOffset, align, alignOffset, avoidCollisions, collisionBoundary, collisionPadding, arrowPadding, sticky, hideWhenDetached, portalContainer, portalClassName, portalZIndex, size and showArrow are inherited. A nested provider or individual tooltip overrides only defined values. False, zero, empty class strings and a null portal target are intentional overrides. The outermost provider continues to own shared delayDuration, skipDelayDuration and disableHoverableContent; an individual tooltip can still override its own delay/hover behavior.
+
+Size `sm` retains the small default, `md` uses 14 px text and `lg` 16 px text. Existing customDesign.baseClasses remain complete custom base designs; their geometry is preserved unless size is explicitly requested. New `classNames.content`, animation, arrow and disabledTrigger slots replace their respective visual defaults. Local slots take precedence over provider slots. `showArrow={false}` removes the decorative arrow.
+
+The Tailwind entry also publishes `@rentnerkev/tooltips/theme.css` with the same `--rentner-*` tokens used by all six packages. Default tooltip colors, border and radius consume those tokens. Set them globally or on the actual portal target when using a scoped theme. `--rentner-tooltip-z` defaults to 9999; a numeric portalZIndex overrides it locally. portalClassName is applied to the visible content, alongside the typed content slot.
+
+```tsx
+<TooltipProvider
+    side="right"
+    sideOffset={10}
+    collisionPadding={16}
+    portalContainer={overlayContainer}
+    portalZIndex={10000}
+    classNames={{
+        content: 'rounded-lg bg-slate-950 px-3 py-2 text-sm text-white',
+    }}
+>
+    <CustomTooltip content="Einträge durchsuchen">
+        <button type="button" aria-label="Suchen">
+            <SearchIcon />
+        </button>
+    </CustomTooltip>
+    <CustomTooltip content="Lokale Ausnahme" side="bottom" showArrow={false}>
+        <button type="button">Hilfe</button>
+    </CustomTooltip>
+</TooltipProvider>
+```
+
+## Remove simple wrappers with existing behavior
+
+A styling-only wrapper can become a single provider customDesign/classNames declaration and direct imports of CustomTooltip. Conditional navigation hints can keep one button: set `disabled={!isCollapsed}` on the tooltip and render the text beside the icon only when expanded. The disabled tooltip returns the original child unchanged. Use `disabledTrigger` when a native disabled control still needs an accessible hover/focus explanation; the package owns the focusable wrapper and preserves its accessible label. Tooltip triggers must remain keyboard-focusable, for example an icon button with an aria-label.
+
+```tsx
+<CustomTooltip content="Abmelden" disabled={!isCollapsed}>
+    <button type="button" aria-label="Abmelden" onClick={handleLogout}>
+        <LogoutIcon aria-hidden="true" />
+        {!isCollapsed && <span>Abmelden</span>}
+    </button>
+</CustomTooltip>
+
+<CustomTooltip content="Wähle zunächst einen Eintrag" disabledTrigger>
+    <button type="button" disabled aria-label="Löschen"><DeleteIcon /></button>
+</CustomTooltip>
+```

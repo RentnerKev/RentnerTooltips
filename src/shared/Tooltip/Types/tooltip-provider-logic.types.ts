@@ -1,11 +1,16 @@
 import type {
+    TooltipClassNames,
     TooltipCustomDesign,
+    TooltipDefaults,
     TooltipProviderProps,
 } from './tooltip.types.ts'
 
-export type TooltipProviderLogicProps = Pick<
+export type TooltipProviderLogicProps = Omit<
     TooltipProviderProps,
-    'customDesign'
+    | 'children'
+    | 'delayDuration'
+    | 'skipDelayDuration'
+    | 'disableHoverableContent'
 >
 
 export interface TooltipProviderLogicResult {
@@ -13,5 +18,7 @@ export interface TooltipProviderLogicResult {
         hasProvider: boolean
         nextProviderDepth: number
         design: TooltipCustomDesign
+        defaults: TooltipDefaults
+        classNames: TooltipClassNames
     }
 }

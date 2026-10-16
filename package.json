@@ -26,11 +26,13 @@
     "files": [
         "dist",
         "tailwind.css",
+        "theme.css",
         "README.md",
         "docs/usage.md"
     ],
     "sideEffects": [
-        "./tailwind.css"
+        "./tailwind.css",
+        "./theme.css"
     ],
     "scripts": {
         "build": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\" && tsc",
@@ -46,8 +48,8 @@
         "playground:build": "bun --cwd playground build",
         "lint": "oxlint --deny-warnings src playground/src playground/vite.config.ts scripts playwright.config.ts .github",
         "lint:fix": "oxlint --fix --deny-warnings src playground/src playground/vite.config.ts scripts playwright.config.ts .github",
-        "format": "oxfmt src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css README.md docs .oxfmtrc.json .oxlintrc.json bunfig.toml .github",
-        "format:check": "oxfmt --check src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css README.md docs .oxfmtrc.json .oxlintrc.json bunfig.toml .github",
+        "format": "oxfmt src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css theme.css README.md docs .oxfmtrc.json .oxlintrc.json bunfig.toml .github",
+        "format:check": "oxfmt --check src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css theme.css README.md docs .oxfmtrc.json .oxlintrc.json bunfig.toml .github",
         "verify": "bun run playground:install && bun run typecheck && bun run playground:typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run playground:build && bun run test:browser && bun run pack:check && bun run pack:consumer"
     },
     "peerDependencies": {
@@ -91,7 +93,8 @@
         "./ai": {
             "types": "./dist/ai.d.ts",
             "import": "./dist/ai.js"
-        }
+        },
+        "./theme.css": "./theme.css"
     },
     "publishConfig": {
         "access": "public"

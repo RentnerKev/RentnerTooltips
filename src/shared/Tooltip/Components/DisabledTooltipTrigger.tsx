@@ -6,14 +6,14 @@ export const DisabledTooltipTrigger = forwardRef<
     HTMLSpanElement,
     DisabledTooltipTriggerProps
 >(function DisabledTooltipTrigger(
-    { children, className, ...triggerProps },
+    { children, className, visualClassName, ...triggerProps },
     forwardedRef,
 ) {
     const {
         state,
         refs: { setWrapperRef },
     } = useDisabledTooltipTriggerLogic(
-        { children, className, ...triggerProps },
+        { children, className, visualClassName, ...triggerProps },
         forwardedRef,
     )
     return (

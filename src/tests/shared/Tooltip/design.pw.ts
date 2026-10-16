@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test'
-import { defaultTooltipDesign } from '../../../config/tooltip.config.ts'
+import {
+    defaultTooltipDesign,
+    tooltipSizeClasses,
+} from '../../../config/tooltip.config.ts'
 import { playgroundDesign } from '../../../../playground/src/config/playground.config.ts'
 
 test.describe('provider tooltip designs', () => {
@@ -41,9 +44,16 @@ test.describe('provider tooltip designs', () => {
             await trigger.scrollIntoViewIfNeeded()
             await trigger.hover()
             await expect(content).toBeVisible()
-            await expect(content).toHaveClass(
-                `z-[9999] ${design.baseClasses} ${design.animationClasses} ${design.contentClasses}`,
-            )
+            const expectedClasses = [
+                'z-[var(--rentner-tooltip-z,9999)]',
+                design.baseClasses,
+                id === 'default-design-trigger' ? tooltipSizeClasses.sm : '',
+                design.contentClasses,
+                design.animationClasses,
+            ]
+                .filter(Boolean)
+                .join(' ')
+            await expect(content).toHaveClass(expectedClasses)
             await expect(content.locator('svg')).toHaveClass(
                 design.arrowClasses!,
             )

@@ -148,7 +148,7 @@ try {
     assert.ok(existsSync(join(installedPackage, 'docs/usage.md')))
     const entryPoints = Object.keys(manifest.exports)
         .filter(
-            (entry) => entry !== './package.json' && entry !== './tailwind.css',
+            (entry) => entry !== './package.json' && !entry.endsWith('.css'),
         )
         .map(
             (entry) => `${manifest.name}${entry === '.' ? '' : entry.slice(1)}`,
@@ -161,6 +161,8 @@ try {
         for (const entry of ${JSON.stringify(entryPoints)}) await import(entry)
         const css = import.meta.resolve('${manifest.name}/tailwind.css')
         if (!readFileSync(new URL(css), 'utf8').trim()) throw new Error('CSS export is empty')
+        const theme = import.meta.resolve('${manifest.name}/theme.css')
+        if (!readFileSync(new URL(theme), 'utf8').includes('--color-rentner-control')) throw new Error('Shared theme export is missing')
     `,
     ])
     writeFileSync(

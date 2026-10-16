@@ -27,6 +27,7 @@ describe('published package contract', () => {
                 default: './dist/index.js',
             },
             './tailwind.css': './tailwind.css',
+            './theme.css': './theme.css',
             './tooltip': {
                 types: './dist/CustomTooltip.d.ts',
                 import: './dist/CustomTooltip.js',

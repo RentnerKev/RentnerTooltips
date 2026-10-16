@@ -35,7 +35,12 @@ function preventChildActivation(event: {
 }
 
 export function useDisabledTooltipTriggerLogic(
-    { children, className, ...triggerProps }: DisabledTooltipTriggerProps,
+    {
+        children,
+        className,
+        visualClassName,
+        ...triggerProps
+    }: DisabledTooltipTriggerProps,
     forwardedRef: ForwardedRef<HTMLSpanElement>,
 ): DisabledTooltipTriggerLogicResult {
     const disabledChild = children as ReactElement<DisabledTriggerChildProps>
@@ -114,7 +119,8 @@ export function useDisabledTooltipTriggerLogic(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlId, controlType, hasExplicitLabel, labelPrefix])
     const wrapperClassName = [
-        'inline-flex rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+        'inline-flex outline-none focus-visible:ring-2 focus-visible:ring-rentner-accent focus-visible:ring-offset-2',
+        visualClassName ?? 'rounded-sm',
         className,
     ]
         .filter(Boolean)

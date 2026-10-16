@@ -1,8 +1,13 @@
 import { useContext, useCallback, useEffect, useRef, useState } from 'react'
 import type { FocusEvent, PointerEvent } from 'react'
-import { defaultTooltipDesign } from '../../../config/tooltip.config.ts'
+import {
+    defaultTooltipDesign,
+    tooltipSizeClasses,
+} from '../../../config/tooltip.config.ts'
 import {
     TooltipDesignContext,
+    TooltipDefaultsContext,
+    TooltipClassNamesContext,
     TooltipProviderDepthContext,
     TooltipHoverableContentContext,
 } from '../TooltipContext.ts'
@@ -12,6 +17,8 @@ import type {
     CustomTooltipLogicProps,
 } from '../Types/custom-tooltip-logic.types.ts'
 
+import { mergeTooltipDefaults } from '../../../lib/Tooltip/tooltipDefaults.ts'
+
 export function useCustomTooltipLogic({
     open,
     defaultOpen,
@@ -19,17 +26,48 @@ export function useCustomTooltipLogic({
     disabled,
     disableHoverableContent,
     customDesign,
+    classNames,
+    ...localDefaults
 }: CustomTooltipLogicProps): CustomTooltipLogicResult {
     const providerDepth = useContext(TooltipProviderDepthContext)
     const inheritedDesign = useContext(TooltipDesignContext)
+    const inheritedDefaults = useContext(TooltipDefaultsContext)
+    const inheritedClassNames = useContext(TooltipClassNamesContext)
     const inheritedDisableHoverableContent = useContext(
         TooltipHoverableContentContext,
     )
+    const defaults = mergeTooltipDefaults(inheritedDefaults, localDefaults)
+    const slots = mergeTooltipDefaults(inheritedClassNames, classNames)
+    const resolvedDesign = mergeTooltipDefaults(
+        mergeTooltipDefaults(defaultTooltipDesign, inheritedDesign),
+        customDesign,
+    )
+    const hasCustomBase =
+        customDesign?.baseClasses !== undefined ||
+        inheritedDesign.baseClasses !== undefined
+    const sizeClasses =
+        !hasCustomBase || defaults.size !== undefined
+            ? tooltipSizeClasses[defaults.size ?? 'sm']
+            : ''
     const design = {
-        ...defaultTooltipDesign,
-        ...inheritedDesign,
-        ...customDesign,
+        baseClasses:
+            resolvedDesign.baseClasses ?? defaultTooltipDesign.baseClasses,
+        animationClasses:
+            resolvedDesign.animationClasses ??
+            defaultTooltipDesign.animationClasses,
+        contentClasses:
+            resolvedDesign.contentClasses ??
+            defaultTooltipDesign.contentClasses,
+        arrowClasses:
+            resolvedDesign.arrowClasses ?? defaultTooltipDesign.arrowClasses,
     }
+    const contentClassName =
+        slots.content ??
+        [design.baseClasses, sizeClasses, design.contentClasses]
+            .filter(Boolean)
+            .join(' ')
+    const animationClassName = slots.animation ?? design.animationClasses
+    const arrowClassName = slots.arrow ?? design.arrowClasses
     const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false)
     if (disabled && internalOpen !== (defaultOpen ?? false)) {
         setInternalOpen(defaultOpen ?? false)
@@ -127,7 +165,16 @@ export function useCustomTooltipLogic({
             handleDismissal(event)
     }
     return {
-        state: { isOpen, providerDepth, design },
+        state: {
+            isOpen,
+            providerDepth,
+            design,
+            defaults,
+            classNames: slots,
+            contentClassName,
+            animationClassName,
+            arrowClassName,
+        },
         handler: {
             handleOpenChange,
             handleFocus,

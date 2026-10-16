@@ -3,6 +3,8 @@ export { TooltipProvider } from './shared/Tooltip/Components/TooltipProvider.tsx
 export { defaultTooltipDesign } from './config/tooltip.config.ts'
 export type {
     TooltipCustomDesign,
+    TooltipClassNames,
+    TooltipDefaults,
     TooltipProps,
     TooltipProviderProps,
 } from './shared/Tooltip/Types/tooltip.types.ts'
