@@ -6,7 +6,7 @@ test('applies provider, nested and local defaults in the actual portal with scop
     await page.goto('/')
     const host = page.getByTestId('defaults-portal-host')
     const content = host.locator(
-        '[data-radix-popper-content-wrapper] > [data-state]',
+        '[data-tooltip-positioner] > [data-tooltip-content]',
     )
     await page.getByTestId('defaults-trigger').focus()
     await expect(content).toBeVisible()

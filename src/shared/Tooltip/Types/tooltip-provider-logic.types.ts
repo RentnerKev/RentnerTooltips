@@ -4,14 +4,9 @@ import type {
     TooltipDefaults,
     TooltipProviderProps,
 } from './tooltip.types.ts'
+import type { TooltipBehavior } from './tooltip-behavior.types.ts'
 
-export type TooltipProviderLogicProps = Omit<
-    TooltipProviderProps,
-    | 'children'
-    | 'delayDuration'
-    | 'skipDelayDuration'
-    | 'disableHoverableContent'
->
+export type TooltipProviderLogicProps = Omit<TooltipProviderProps, 'children'>
 
 export interface TooltipProviderLogicResult {
     state: {
@@ -20,5 +15,6 @@ export interface TooltipProviderLogicResult {
         design: TooltipCustomDesign
         defaults: TooltipDefaults
         classNames: TooltipClassNames
+        behavior: TooltipBehavior
     }
 }

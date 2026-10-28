@@ -1,19 +1,16 @@
-import type { FocusEventHandler, PointerEventHandler } from 'react'
+import type { useTooltipInteraction } from '../Hooks/useTooltipInteraction.ts'
+import type { useTooltipPosition } from '../Hooks/useTooltipPosition.ts'
+import type { CSSProperties } from 'react'
 import type {
     TooltipClassNames,
     TooltipCustomDesign,
     TooltipDefaults,
     TooltipProps,
 } from './tooltip.types.ts'
-export interface FocusSettlement {
-    view: Window
-    frame: number
-    onScroll: (event: Event) => void
-}
-
 export interface CustomTooltipLogicResult {
-    state: {
-        isOpen: boolean
+    state: ReturnType<typeof useTooltipInteraction>['state'] & {
+        position: ReturnType<typeof useTooltipPosition>
+        contentStyle: CSSProperties
         providerDepth: number
         design: Required<TooltipCustomDesign>
         contentClassName: string
@@ -22,19 +19,11 @@ export interface CustomTooltipLogicResult {
         defaults: TooltipDefaults
         classNames: TooltipClassNames
     }
-    handler: {
-        handleOpenChange: (open: boolean) => void
-        handleFocus: FocusEventHandler<HTMLElement>
-        handleDismissal: (event: { defaultPrevented: boolean }) => void
-        handlePointerLeave: PointerEventHandler<HTMLElement>
-    }
+    handler: ReturnType<typeof useTooltipInteraction>['handler']
+    refs: ReturnType<typeof useTooltipInteraction>['refs']
 }
 
 export type CustomTooltipLogicProps = Omit<
     TooltipProps,
-    | 'children'
-    | 'content'
-    | 'disabledTrigger'
-    | 'disabledTriggerClassName'
-    | 'delayDuration'
+    'children' | 'content' | 'disabledTrigger' | 'disabledTriggerClassName'
 >

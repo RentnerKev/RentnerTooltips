@@ -89,7 +89,7 @@ properties replace inherited values; each class string replaces that entire
 property. Use `''` to clear a property's classes. Without `customDesign`, the
 existing default and standalone behavior remains available.
 
-Nested providers scope design overrides while sharing the outer Radix provider,
+Nested providers scope design overrides while sharing the outer shared provider,
 opening delay, skip-delay window, and hover behavior. Use a tooltip's own
 `delayDuration` for a local timing override.
 
