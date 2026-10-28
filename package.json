@@ -1,11 +1,10 @@
 {
     "name": "@rentnerkev/tooltips",
     "version": "2.2.0",
-    "description": "A lightweight, customizable React tooltip component powered by Radix UI.",
+    "description": "A lightweight, customizable React tooltip component with native DOM positioning.",
     "keywords": [
         "react",
         "tooltip",
-        "radix-ui",
         "accessibility",
         "ui"
     ],
@@ -35,6 +34,7 @@
         "./theme.css"
     ],
     "scripts": {
+        "benchmark": "bun scripts/benchmark.mjs",
         "build": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\" && tsc",
         "typecheck": "tsc --noEmit && bun run typecheck:automation",
         "typecheck:automation": "tsc --noEmit -p .github/scripts/tsconfig.json",
@@ -48,16 +48,13 @@
         "playground:build": "bun --cwd playground build",
         "lint": "oxlint --deny-warnings src playground/src playground/vite.config.ts scripts playwright.config.ts .github",
         "lint:fix": "oxlint --fix --deny-warnings src playground/src playground/vite.config.ts scripts playwright.config.ts .github",
-        "format": "bun fmt src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css theme.css README.md docs bunfig.toml .oxlintrc.json .github",
-        "format:check": "bun fmt --check src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css theme.css README.md docs bunfig.toml .oxlintrc.json .github",
+        "format": "bun fmt src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css theme.css README.md docs bunfig.toml .oxlintrc.json .github benchmarks",
+        "format:check": "bun fmt --check src playground/src playground/package.json playground/tsconfig.json playground/vite.config.ts scripts playwright.config.ts package.json tsconfig.json tailwind.css theme.css README.md docs bunfig.toml .oxlintrc.json .github benchmarks",
         "verify": "bun run playground:install && bun run typecheck && bun run playground:typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run playground:build && bun run test:browser && bun run pack:check && bun run pack:consumer"
     },
     "peerDependencies": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
-    },
-    "dependencies": {
-        "@radix-ui/react-tooltip": "^1.4.1"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.14.0",

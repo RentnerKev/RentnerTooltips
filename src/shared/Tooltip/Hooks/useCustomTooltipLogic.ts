@@ -1,5 +1,7 @@
-import { useContext, useCallback, useEffect, useRef, useState } from 'react'
-import type { FocusEvent, PointerEvent } from 'react'
+import { useContext } from 'react'
+import type { CSSProperties } from 'react'
+import { useTooltipInteraction } from './useTooltipInteraction.ts'
+import { useTooltipPosition } from './useTooltipPosition.ts'
 import {
     defaultTooltipDesign,
     tooltipSizeClasses,
@@ -9,10 +11,8 @@ import {
     TooltipDefaultsContext,
     TooltipClassNamesContext,
     TooltipProviderDepthContext,
-    TooltipHoverableContentContext,
 } from '../TooltipContext.ts'
 import type {
-    FocusSettlement,
     CustomTooltipLogicResult,
     CustomTooltipLogicProps,
 } from '../Types/custom-tooltip-logic.types.ts'
@@ -23,6 +23,7 @@ export function useCustomTooltipLogic({
     open,
     defaultOpen,
     onOpenChange,
+    delayDuration,
     disabled,
     disableHoverableContent,
     customDesign,
@@ -33,9 +34,6 @@ export function useCustomTooltipLogic({
     const inheritedDesign = useContext(TooltipDesignContext)
     const inheritedDefaults = useContext(TooltipDefaultsContext)
     const inheritedClassNames = useContext(TooltipClassNamesContext)
-    const inheritedDisableHoverableContent = useContext(
-        TooltipHoverableContentContext,
-    )
     const defaults = mergeTooltipDefaults(inheritedDefaults, localDefaults)
     const slots = mergeTooltipDefaults(inheritedClassNames, classNames)
     const resolvedDesign = mergeTooltipDefaults(
@@ -68,105 +66,55 @@ export function useCustomTooltipLogic({
             .join(' ')
     const animationClassName = slots.animation ?? design.animationClasses
     const arrowClassName = slots.arrow ?? design.arrowClasses
-    const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false)
-    if (disabled && internalOpen !== (defaultOpen ?? false)) {
-        setInternalOpen(defaultOpen ?? false)
-    }
-    const isOpen = open ?? internalOpen
-    const requestedOpen = useRef(isOpen)
-    const focusSettlement = useRef<FocusSettlement | null>(null)
-
-    useEffect(() => {
-        requestedOpen.current = isOpen
-    }, [isOpen])
-
-    const cancelFocusSettlement = useCallback(() => {
-        const pending = focusSettlement.current
-        if (!pending) return
-        pending.view.cancelAnimationFrame(pending.frame)
-        pending.view.removeEventListener('scroll', pending.onScroll, true)
-        focusSettlement.current = null
-    }, [])
-
-    useEffect(() => cancelFocusSettlement, [cancelFocusSettlement])
-
-    useEffect(() => {
-        if (!disabled) return
-        cancelFocusSettlement()
-    }, [cancelFocusSettlement, disabled])
-
-    useEffect(() => {
-        if (!isOpen || disabled) return
-        // Radix dispatches this before another tooltip dismisses the current one.
-        document.addEventListener('tooltip.open', cancelFocusSettlement, true)
-        return () => {
-            document.removeEventListener(
-                'tooltip.open',
-                cancelFocusSettlement,
-                true,
-            )
-        }
-    }, [cancelFocusSettlement, disabled, isOpen])
-
-    function handleFocus(event: FocusEvent<HTMLElement>) {
-        if (event.defaultPrevented) return
-        cancelFocusSettlement()
-        const trigger = event.currentTarget
-        const view = trigger.ownerDocument.defaultView
-        if (!view) return
-
-        const pending: FocusSettlement = {
-            view,
-            frame: 0,
-            onScroll(scrollEvent) {
-                const target = scrollEvent.target as Node | null
-                if (target?.contains?.(trigger)) scheduleSettlement()
-            },
-        }
-
-        function scheduleSettlement() {
-            pending.view.cancelAnimationFrame(pending.frame)
-            // Wait for two quiet frames, including smooth focus scrolling.
-            pending.frame = pending.view.requestAnimationFrame(() => {
-                pending.frame = pending.view.requestAnimationFrame(() => {
-                    if (focusSettlement.current === pending) {
-                        cancelFocusSettlement()
-                    }
-                })
-            })
-        }
-
-        focusSettlement.current = pending
-        view.addEventListener('scroll', pending.onScroll, true)
-        scheduleSettlement()
-    }
-
-    function handleOpenChange(nextOpen: boolean) {
-        // Native focus can scroll an ancestor after Radix has opened the tooltip.
-        // Explicit dismissal and other tooltip openings cancel this short guard.
-        if (!nextOpen && focusSettlement.current) return
-        requestedOpen.current = nextOpen
-        if (open === undefined) setInternalOpen(nextOpen)
-        onOpenChange?.(nextOpen)
-    }
-
-    function handleDismissal(event: { defaultPrevented: boolean }) {
-        if (event.defaultPrevented) return
-        cancelFocusSettlement()
-        // Preserve an open-then-close request in one task before React commits
-        // the controlled Radix root; otherwise Radix still sees its closed prop.
-        if (open === undefined && requestedOpen.current && !isOpen) {
-            handleOpenChange(false)
-        }
-    }
-
-    function handlePointerLeave(event: PointerEvent<HTMLElement>) {
-        if (disableHoverableContent ?? inheritedDisableHoverableContent)
-            handleDismissal(event)
+    const interaction = useTooltipInteraction({
+        open,
+        defaultOpen,
+        onOpenChange,
+        disabled,
+        delayDuration,
+        disableHoverableContent,
+    })
+    const position = useTooltipPosition(
+        interaction.state.isOpen,
+        interaction.state.triggerNode,
+        interaction.refs.contentRef,
+        interaction.refs.positionerRef,
+        defaults,
+        interaction.state.portalDocument,
+    )
+    const contentStyle: CSSProperties &
+        Record<`--${string}`, string | undefined> = {
+        position: 'relative',
+        zIndex: defaults.portalZIndex,
+        '--rentner-tooltip-transform-origin': position?.transformOrigin,
+        '--rentner-tooltip-content-available-width': position
+            ? `${position.availableWidth}px`
+            : undefined,
+        '--rentner-tooltip-content-available-height': position
+            ? `${position.availableHeight}px`
+            : undefined,
+        '--rentner-tooltip-trigger-width': position
+            ? `${position.triggerWidth}px`
+            : undefined,
+        '--rentner-tooltip-trigger-height': position
+            ? `${position.triggerHeight}px`
+            : undefined,
+        // Existing style consumers can keep their published Tooltip variables.
+        '--radix-tooltip-content-transform-origin':
+            'var(--rentner-tooltip-transform-origin)',
+        '--radix-tooltip-content-available-width':
+            'var(--rentner-tooltip-content-available-width)',
+        '--radix-tooltip-content-available-height':
+            'var(--rentner-tooltip-content-available-height)',
+        '--radix-tooltip-trigger-width': 'var(--rentner-tooltip-trigger-width)',
+        '--radix-tooltip-trigger-height':
+            'var(--rentner-tooltip-trigger-height)',
     }
     return {
         state: {
-            isOpen,
+            ...interaction.state,
+            position,
+            contentStyle,
             providerDepth,
             design,
             defaults,
@@ -175,11 +123,7 @@ export function useCustomTooltipLogic({
             animationClassName,
             arrowClassName,
         },
-        handler: {
-            handleOpenChange,
-            handleFocus,
-            handleDismissal,
-            handlePointerLeave,
-        },
+        handler: interaction.handler,
+        refs: interaction.refs,
     }
 }

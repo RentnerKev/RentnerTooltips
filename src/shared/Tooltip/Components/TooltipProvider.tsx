@@ -1,4 +1,3 @@
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import type { TooltipProviderProps } from '../Types/tooltip.types.ts'
 import {
     TooltipDesignContext,
@@ -6,13 +5,12 @@ import {
     TooltipClassNamesContext,
     TooltipProviderDepthContext,
     TooltipHoverableContentContext,
+    TooltipBehaviorContext,
 } from '../TooltipContext.ts'
 import { useTooltipProviderLogic } from '../Hooks/useTooltipProviderLogic.ts'
 
 export function TooltipProvider({
     children,
-    delayDuration = 200,
-    skipDelayDuration,
     disableHoverableContent,
     ...props
 }: TooltipProviderProps) {
@@ -30,15 +28,11 @@ export function TooltipProvider({
                             <TooltipHoverableContentContext.Provider
                                 value={disableHoverableContent}
                             >
-                                <TooltipPrimitive.Provider
-                                    delayDuration={delayDuration}
-                                    skipDelayDuration={skipDelayDuration}
-                                    disableHoverableContent={
-                                        disableHoverableContent
-                                    }
+                                <TooltipBehaviorContext.Provider
+                                    value={state.behavior}
                                 >
                                     {children}
-                                </TooltipPrimitive.Provider>
+                                </TooltipBehaviorContext.Provider>
                             </TooltipHoverableContentContext.Provider>
                         </TooltipProviderDepthContext.Provider>
                     )}

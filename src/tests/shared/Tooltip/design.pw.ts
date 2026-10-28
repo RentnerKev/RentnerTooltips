@@ -11,7 +11,7 @@ test.describe('provider tooltip designs', () => {
     }) => {
         await page.goto('/')
         const content = page.locator(
-            '[data-radix-popper-content-wrapper] > [data-state]',
+            '[data-tooltip-positioner] > [data-tooltip-content]',
         )
         const cases = [
             ['provider-trigger', playgroundDesign],
@@ -62,7 +62,7 @@ test.describe('provider tooltip designs', () => {
                     page
                         .locator('#tooltip-portal-host')
                         .locator(
-                            '[data-radix-popper-content-wrapper] > [data-state]',
+                            '[data-tooltip-positioner] > [data-tooltip-content]',
                         ),
                 ).toHaveCount(1)
             }
@@ -78,12 +78,12 @@ test.describe('provider tooltip designs', () => {
         await page.goto('/')
         await page.getByTestId('nested-design-trigger').hover()
         const content = page.locator(
-            '[data-radix-popper-content-wrapper] > [data-state]',
+            '[data-tooltip-positioner] > [data-tooltip-content]',
         )
         await expect(content).toBeVisible()
         await content.hover()
         await expect(content).toBeVisible()
-        // Radix creates a grace area on pointerleave and tracks subsequent moves.
+        // The tooltip creates a grace area on pointerleave and tracks subsequent moves.
         // Cross its boundary instead of teleporting to the final leave point.
         await page.mouse.move(16, 16, { steps: 12 })
         await expect(content).toBeHidden()

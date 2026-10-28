@@ -12,7 +12,7 @@ export function BoundaryProbe({
     return (
         <div className={`absolute z-10 ${className}`}>
             <CustomTooltip
-                content={`${label}: Radix may flip this tooltip at the boundary.`}
+                content={`${label}: The tooltip may flip at the boundary.`}
                 side={side}
                 collisionBoundary={boundary}
                 collisionPadding={18}

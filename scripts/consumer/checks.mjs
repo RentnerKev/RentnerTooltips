@@ -1,6 +1,6 @@
 export async function check({ page, expect }) {
     const visibleContent = page.locator(
-        '[data-radix-popper-content-wrapper] > [data-state]',
+        '[data-tooltip-positioner] > [data-tooltip-content]',
     )
     /* eslint-disable no-await-in-loop -- Each trigger changes the visible tooltip. */
     for (const [id, contentClasses, arrowClasses] of [

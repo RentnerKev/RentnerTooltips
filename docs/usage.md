@@ -1,6 +1,6 @@
 # @rentnerkev/tooltips
 
-A lightweight, customizable React tooltip component built on Radix UI. The
+A lightweight, customizable React tooltip component built with React and native DOM APIs. The
 package provides a shared provider, trigger, portal, collision handling, and
 the accessible tooltip relationship. Standalone tooltips remain supported.
 
@@ -47,13 +47,13 @@ export function Example() {
 
 Use one `TooltipProvider` around a section that contains multiple tooltips. A
 `CustomTooltip` inside that provider reuses it instead of creating another
-Radix provider. Standalone `CustomTooltip` usage creates a fallback provider
+behavior provider. Standalone `CustomTooltip` usage creates a fallback provider
 with the default 200 ms delay.
 
 The trigger must be a single React element. For keyboard support, it should be
 focusable, such as a `button` or link. Custom trigger components must forward
-the props and ref provided by Radix. Radix handles hover, focus, touch, and
-ARIA behavior.
+the props and ref provided by the tooltip. The package handles hover, focus,
+touch dismissal, and ARIA behavior.
 
 Keyboard tooltips stay open while the browser scrolls their focused trigger
 into view. Escape, pointer dismissal, focus leaving the trigger, and opening
@@ -82,7 +82,7 @@ starts from `defaultOpen` again; a controlled tooltip follows its `open` prop.
 | `sideOffset`               | `number`                                    | `8`                       | Distance from the trigger in pixels.                                                 |
 | `align`                    | `'start' \| 'center' \| 'end'`              | `'center'`                | Alignment along the selected side.                                                   |
 | `alignOffset`              | `number`                                    | `0`                       | Offset from the selected alignment.                                                  |
-| `avoidCollisions`          | `boolean`                                   | `true`                    | Allows Radix to move content away from boundaries.                                   |
+| `avoidCollisions`          | `boolean`                                   | `true`                    | Allows the tooltip to move content away from boundaries.                             |
 | `collisionBoundary`        | `Element \| null \| Array<Element \| null>` | `[]`                      | Custom collision boundary or boundaries.                                             |
 | `collisionPadding`         | `number \| SidePadding`                     | `0`                       | Space kept between content and collision boundaries.                                 |
 | `arrowPadding`             | `number`                                    | `0`                       | Space kept between the arrow and content edges.                                      |
@@ -138,7 +138,7 @@ name. For labels provided outside the native HTML label mechanism, pass
 | `disableHoverableContent` | `boolean`             | `false`                    | Closes content when the pointer leaves its trigger.            |
 
 Nested package providers inherit and override the outer design without creating
-additional Radix provider instances. The outermost package provider continues to
+additional behavior provider instances. The outermost package provider continues to
 own `delayDuration`, `skipDelayDuration`, and `disableHoverableContent`; setting
 these on a nested provider does not change that existing behavior. Use
 `CustomTooltip.delayDuration` or `CustomTooltip.disableHoverableContent` when one
@@ -209,8 +209,9 @@ tooltip-local customization behave as before, including standalone tooltips.
 </CustomTooltip>
 ```
 
-The collision and portal types are derived from the installed Radix Tooltip
-version, so all accepted boundary and padding shapes stay type-safe.
+Collision boundaries accept an Element, null, or an array of those values;
+padding accepts a number or per-side values. Portal targets accept an Element
+or DocumentFragment, including a ShadowRoot; null selects document.body.
 
 `TooltipProps`, `TooltipProviderProps`, and `TooltipCustomDesign` are exported
 TypeScript types from the package root, `@rentnerkev/tooltips/tooltip`, and

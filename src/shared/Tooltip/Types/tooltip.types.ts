@@ -1,9 +1,3 @@
-import type {
-    TooltipContentProps as RadixTooltipContentProps,
-    TooltipPortalProps as RadixTooltipPortalProps,
-    TooltipProps as RadixTooltipRootProps,
-    TooltipProviderProps as RadixTooltipProviderProps,
-} from '@radix-ui/react-tooltip'
 import type { ReactElement, ReactNode } from 'react'
 
 export interface TooltipCustomDesign {
@@ -22,17 +16,19 @@ export interface TooltipClassNames {
 }
 
 export interface TooltipDefaults {
-    side?: RadixTooltipContentProps['side']
-    sideOffset?: RadixTooltipContentProps['sideOffset']
-    align?: RadixTooltipContentProps['align']
-    alignOffset?: RadixTooltipContentProps['alignOffset']
-    avoidCollisions?: RadixTooltipContentProps['avoidCollisions']
-    collisionBoundary?: RadixTooltipContentProps['collisionBoundary']
-    collisionPadding?: RadixTooltipContentProps['collisionPadding']
-    arrowPadding?: RadixTooltipContentProps['arrowPadding']
-    sticky?: RadixTooltipContentProps['sticky']
-    hideWhenDetached?: RadixTooltipContentProps['hideWhenDetached']
-    portalContainer?: RadixTooltipPortalProps['container']
+    side?: 'top' | 'right' | 'bottom' | 'left'
+    sideOffset?: number
+    align?: 'start' | 'center' | 'end'
+    alignOffset?: number
+    avoidCollisions?: boolean
+    collisionBoundary?: Element | null | (Element | null)[]
+    collisionPadding?:
+        | number
+        | Partial<Record<'top' | 'right' | 'bottom' | 'left', number>>
+    arrowPadding?: number
+    sticky?: 'partial' | 'always'
+    hideWhenDetached?: boolean
+    portalContainer?: Element | DocumentFragment | null
     portalClassName?: string
     portalZIndex?: number
     size?: 'sm' | 'md' | 'lg'
@@ -43,9 +39,9 @@ export interface TooltipProviderProps extends TooltipDefaults {
     children: ReactNode
     customDesign?: TooltipCustomDesign
     classNames?: TooltipClassNames
-    delayDuration?: RadixTooltipProviderProps['delayDuration']
-    skipDelayDuration?: RadixTooltipProviderProps['skipDelayDuration']
-    disableHoverableContent?: RadixTooltipProviderProps['disableHoverableContent']
+    delayDuration?: number
+    skipDelayDuration?: number
+    disableHoverableContent?: boolean
 }
 
 export interface TooltipProps extends TooltipDefaults {
@@ -54,11 +50,11 @@ export interface TooltipProps extends TooltipDefaults {
     disabled?: boolean
     disabledTrigger?: boolean
     disabledTriggerClassName?: string
-    open?: RadixTooltipRootProps['open']
-    defaultOpen?: RadixTooltipRootProps['defaultOpen']
-    onOpenChange?: RadixTooltipRootProps['onOpenChange']
-    delayDuration?: RadixTooltipRootProps['delayDuration']
-    disableHoverableContent?: RadixTooltipRootProps['disableHoverableContent']
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    delayDuration?: number
+    disableHoverableContent?: boolean
     customDesign?: TooltipCustomDesign
     classNames?: TooltipClassNames
 }

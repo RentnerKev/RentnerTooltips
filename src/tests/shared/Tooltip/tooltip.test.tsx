@@ -222,7 +222,7 @@ describe('tooltip API', () => {
         expect(markup).toContain('style="pointer-events:none"')
     })
 
-    test('forwards Radix trigger state to the disabled wrapper', () => {
+    test('forwards tooltip trigger state to the disabled wrapper', () => {
         const markup = renderToStaticMarkup(
             <CustomTooltip
                 content="This action is unavailable"
