@@ -1,7 +1,14 @@
-import { useLayoutEffect, useState } from 'react'
-import type { CSSProperties, RefObject } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import type { TooltipDefaults } from '../Types/tooltip.types.ts'
-import type { TooltipGeometry } from '../../../lib/Tooltip/Types/tooltip-geometry.types.ts'
+import type { TooltipPosition } from '../../../lib/Tooltip/Types/tooltip-geometry.types.ts'
+import { createTooltipMeasurements } from '../../../lib/Tooltip/tooltipMeasurements.ts'
+import { sameTooltipPosition } from '../../../lib/Tooltip/tooltipPositionEquality.ts'
+import {
+    sameTooltipDefaults,
+    snapshotTooltipDefaults,
+    liveTooltipCollisionDefaults,
+} from '../../../lib/Tooltip/tooltipDefaults.ts'
 import {
     composedParent,
     computeTooltipGeometry,
@@ -19,27 +26,51 @@ export function useTooltipPosition(
     defaults: TooltipDefaults,
     portalDocument: Document | null,
 ) {
-    const [position, setPosition] = useState<
-        | (TooltipGeometry & {
-              style: CSSProperties
-              separateDescription: boolean
-          })
-        | null
-    >(null)
+    const [position, setPosition] = useState<TooltipPosition | null>(null)
+    const liveOptions = useRef<TooltipDefaults | null>(null)
+    const comparedOptions = useRef<TooltipDefaults | null>(null)
+    const updatePosition = useRef<(() => void) | null>(null)
     const {
         side,
         sideOffset,
         align,
         alignOffset,
         avoidCollisions,
-        collisionBoundary,
-        collisionPadding,
         arrowPadding,
         sticky,
         hideWhenDetached,
         showArrow,
         portalContainer,
     } = defaults
+    useLayoutEffect(() => {
+        if (!isOpen) return
+        const next = liveTooltipCollisionDefaults(
+            {
+                side,
+                sideOffset,
+                align,
+                alignOffset,
+                avoidCollisions,
+                collisionBoundary: defaults.collisionBoundary,
+                collisionPadding: defaults.collisionPadding,
+                arrowPadding,
+                sticky,
+                hideWhenDetached,
+                showArrow,
+            },
+            () => defaults,
+        )
+        liveOptions.current = next
+        if (
+            comparedOptions.current &&
+            sameTooltipDefaults(comparedOptions.current, next)
+        )
+            return
+        comparedOptions.current = snapshotTooltipDefaults(next)
+        // Option changes affect geometry before paint, without replacing the
+        // observers/listeners that still belong to the same DOM nodes.
+        updatePosition.current?.()
+    })
     useLayoutEffect(() => {
         if (
             !isOpen ||
@@ -58,23 +89,14 @@ export function useTooltipPosition(
             | { left: number; top: number; width: number; height: number }
             | undefined
         function update() {
-            const origin = fixedTooltipOrigin(positioner!)
-            const anchorRect = trigger!.getBoundingClientRect()
-            const options = {
-                side,
-                sideOffset,
-                align,
-                alignOffset,
-                avoidCollisions,
-                collisionBoundary,
-                collisionPadding,
-                arrowPadding,
-                sticky,
-                hideWhenDetached,
-                showArrow,
-            }
+            const options = liveOptions.current
+            if (!options) return
+            comparedOptions.current = snapshotTooltipDefaults(options)
+            const measurements = createTooltipMeasurements()
+            const anchorRect = measurements.rect(trigger!)
+            const origin = fixedTooltipOrigin(positioner!, measurements)
             const boundary = relativeTooltipRect(
-                tooltipBoundary(trigger!, options),
+                tooltipBoundary(trigger!, options, measurements),
                 origin,
             )
             const geometry = computeTooltipGeometry(
@@ -83,9 +105,9 @@ export function useTooltipPosition(
                 content!.offsetHeight,
                 boundary,
                 options,
-                view!.getComputedStyle(trigger!).direction === 'rtl',
+                measurements.style(trigger!).direction === 'rtl',
             )
-            const next = {
+            const next: TooltipPosition = {
                 ...geometry,
                 separateDescription:
                     trigger!.getRootNode() !== positioner!.getRootNode(),
@@ -95,7 +117,7 @@ export function useTooltipPosition(
                     top: geometry.y,
                     width: 'max-content',
                     maxWidth:
-                        avoidCollisions === false
+                        options.avoidCollisions === false
                             ? undefined
                             : Math.max(
                                   1,
@@ -105,14 +127,19 @@ export function useTooltipPosition(
                                   ),
                               ),
                     visibility:
-                        hideWhenDetached &&
-                        (geometry.detached || tooltipReferenceHidden(trigger!))
+                        options.hideWhenDetached &&
+                        (geometry.detached ||
+                            tooltipReferenceHidden(
+                                trigger!,
+                                anchorRect,
+                                measurements,
+                            ))
                             ? ('hidden' as const)
                             : undefined,
                 },
             }
             setPosition((previous) =>
-                previous && JSON.stringify(previous) === JSON.stringify(next)
+                previous && sameTooltipPosition(previous, next)
                     ? previous
                     : next,
             )
@@ -159,9 +186,9 @@ export function useTooltipPosition(
             view!.cancelAnimationFrame(frame)
             frame = view!.requestAnimationFrame(update)
         }
+        updatePosition.current = update
         update()
         const observer = new view.ResizeObserver(schedule)
-        observer.observe(trigger)
         observer.observe(content)
         const roots = new Set<Node>()
         let element: Element | null = trigger
@@ -177,6 +204,7 @@ export function useTooltipPosition(
         view.visualViewport?.addEventListener('resize', schedule)
         view.visualViewport?.addEventListener('scroll', schedule)
         return () => {
+            if (updatePosition.current === update) updatePosition.current = null
             view.cancelAnimationFrame(frame)
             observer.disconnect()
             moveObserver?.disconnect()
@@ -192,17 +220,6 @@ export function useTooltipPosition(
         triggerNode,
         contentRef,
         positionerRef,
-        side,
-        sideOffset,
-        align,
-        alignOffset,
-        avoidCollisions,
-        collisionBoundary,
-        collisionPadding,
-        arrowPadding,
-        sticky,
-        hideWhenDetached,
-        showArrow,
         portalContainer,
     ])
     return position

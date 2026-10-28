@@ -29,3 +29,22 @@ export interface TooltipGeometry {
     triggerWidth: number
     triggerHeight: number
 }
+
+export interface TooltipPositionStyle {
+    position: 'fixed'
+    left: number
+    top: number
+    width: 'max-content'
+    maxWidth: number | undefined
+    visibility: 'hidden' | undefined
+}
+
+export interface TooltipPosition extends TooltipGeometry {
+    style: TooltipPositionStyle
+    separateDescription: boolean
+}
+
+export interface TooltipMeasurements {
+    rect: (element: Element) => TooltipRect
+    style: (element: Element) => CSSStyleDeclaration
+}

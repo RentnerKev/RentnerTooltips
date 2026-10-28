@@ -3,6 +3,7 @@ import type {
     TooltipGeometry,
     TooltipPoint,
     TooltipRect,
+    TooltipMeasurements,
 } from './Types/tooltip-geometry.types.ts'
 
 function clamp(value: number, min: number, max: number) {
@@ -154,6 +155,7 @@ export function isComposedAncestor(ancestor: EventTarget | null, node: Node) {
 export function tooltipBoundary(
     trigger: HTMLElement,
     options: TooltipDefaults,
+    measurements?: TooltipMeasurements,
 ): TooltipRect {
     const document = trigger.ownerDocument
     const view = document.defaultView!
@@ -168,7 +170,8 @@ export function tooltipBoundary(
         : [options.collisionBoundary]
     for (const element of boundaries) {
         if (!element) continue
-        const rect = element.getBoundingClientRect()
+        const rect =
+            measurements?.rect(element) ?? element.getBoundingClientRect()
         left = Math.max(left, rect.left)
         top = Math.max(top, rect.top)
         right = Math.min(right, rect.right)
@@ -184,11 +187,15 @@ export function tooltipBoundary(
     }
 }
 
-export function fixedTooltipOrigin(positioner: HTMLElement) {
+export function fixedTooltipOrigin(
+    positioner: HTMLElement,
+    measurements?: TooltipMeasurements,
+) {
     const view = positioner.ownerDocument.defaultView!
     let parent = composedParent(positioner)
     while (parent) {
-        const style = view.getComputedStyle(parent)
+        const style =
+            measurements?.style(parent) ?? view.getComputedStyle(parent)
         if (
             style.transform !== 'none' ||
             [style.translate, style.scale, style.rotate].some(
@@ -204,7 +211,8 @@ export function fixedTooltipOrigin(positioner: HTMLElement) {
                 style.willChange,
             )
         ) {
-            const rect = parent.getBoundingClientRect()
+            const rect =
+                measurements?.rect(parent) ?? parent.getBoundingClientRect()
             const element = parent as HTMLElement
             const scaleX = element.offsetWidth
                 ? rect.width / element.offsetWidth
@@ -248,19 +256,30 @@ export function relativeTooltipRect(
     }
 }
 
-export function tooltipReferenceHidden(trigger: HTMLElement) {
-    const rect = trigger.getBoundingClientRect()
-    const boundary = tooltipBoundary(trigger, {})
+export function tooltipReferenceHidden(
+    trigger: HTMLElement,
+    rect: TooltipRect,
+    measurements?: TooltipMeasurements,
+) {
+    const boundary = tooltipBoundary(trigger, {}, measurements)
     let parent = composedParent(trigger)
     while (parent) {
         const style =
+            measurements?.style(parent) ??
             trigger.ownerDocument.defaultView!.getComputedStyle(parent)
-        const clip = parent.getBoundingClientRect()
-        if (/auto|scroll|hidden|clip/.test(style.overflowX)) {
+        const clipsX = /auto|scroll|hidden|clip/.test(style.overflowX)
+        const clipsY = /auto|scroll|hidden|clip/.test(style.overflowY)
+        if (!clipsX && !clipsY) {
+            parent = composedParent(parent)
+            continue
+        }
+        const clip =
+            measurements?.rect(parent) ?? parent.getBoundingClientRect()
+        if (clipsX) {
             boundary.left = Math.max(boundary.left, clip.left)
             boundary.right = Math.min(boundary.right, clip.right)
         }
-        if (/auto|scroll|hidden|clip/.test(style.overflowY)) {
+        if (clipsY) {
             boundary.top = Math.max(boundary.top, clip.top)
             boundary.bottom = Math.min(boundary.bottom, clip.bottom)
         }

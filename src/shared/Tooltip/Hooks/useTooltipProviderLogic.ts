@@ -1,5 +1,6 @@
 import { useContext, useMemo, useState } from 'react'
 import { createTooltipTiming } from '../../../lib/Tooltip/tooltipCoordination.ts'
+import { useStableTooltipDefaults } from './useStableTooltipDefaults.ts'
 import {
     TooltipDesignContext,
     TooltipDefaultsContext,
@@ -46,12 +47,15 @@ export function useTooltipProviderLogic({
         () => mergeTooltipDefaults(inheritedClassNames, classNames),
         [inheritedClassNames, classNames],
     )
+    const defaults = useStableTooltipDefaults(
+        mergeTooltipDefaults(inheritedDefaults, localDefaults),
+    )
     return {
         state: {
             hasProvider: providerDepth > 0,
             nextProviderDepth: providerDepth + 1,
             design,
-            defaults: mergeTooltipDefaults(inheritedDefaults, localDefaults),
+            defaults,
             classNames: slots,
             behavior,
         },
