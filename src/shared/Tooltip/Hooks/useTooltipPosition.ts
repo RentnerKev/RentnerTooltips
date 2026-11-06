@@ -52,11 +52,11 @@ export function useTooltipPosition(
         const positioner = positionerRef.current
         const view = trigger?.ownerDocument.defaultView
         if (!trigger || !content || !positioner || !view) return
-        let frame = 0
-        let moveObserver: IntersectionObserver | undefined
-        let observedAnchor:
-            | { left: number; top: number; width: number; height: number }
-            | undefined
+        const scheduled: {
+            frame: number
+            moveObserver?: IntersectionObserver
+            observedAnchor?: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>
+        } = { frame: 0 }
         function update() {
             const origin = fixedTooltipOrigin(positioner!)
             const anchorRect = trigger!.getBoundingClientRect()
@@ -118,14 +118,14 @@ export function useTooltipPosition(
             )
             if (
                 view!.IntersectionObserver &&
-                (!observedAnchor ||
-                    observedAnchor.left !== anchorRect.left ||
-                    observedAnchor.top !== anchorRect.top ||
-                    observedAnchor.width !== anchorRect.width ||
-                    observedAnchor.height !== anchorRect.height)
+                (!scheduled.observedAnchor ||
+                    scheduled.observedAnchor.left !== anchorRect.left ||
+                    scheduled.observedAnchor.top !== anchorRect.top ||
+                    scheduled.observedAnchor.width !== anchorRect.width ||
+                    scheduled.observedAnchor.height !== anchorRect.height)
             ) {
-                moveObserver?.disconnect()
-                observedAnchor = {
+                scheduled.moveObserver?.disconnect()
+                scheduled.observedAnchor = {
                     left: anchorRect.left,
                     top: anchorRect.top,
                     width: anchorRect.width,
@@ -140,7 +140,7 @@ export function useTooltipPosition(
                         -Math.floor(root.clientHeight - anchorRect.bottom),
                         -Math.floor(anchorRect.left),
                     ]
-                    moveObserver = new view!.IntersectionObserver(
+                    scheduled.moveObserver = new view!.IntersectionObserver(
                         (entries) => {
                             if (entries[0]?.intersectionRatio !== 1) schedule()
                         },
@@ -151,13 +151,13 @@ export function useTooltipPosition(
                             threshold: 1,
                         },
                     )
-                    moveObserver.observe(trigger!)
+                    scheduled.moveObserver.observe(trigger!)
                 }
             }
         }
         function schedule() {
-            view!.cancelAnimationFrame(frame)
-            frame = view!.requestAnimationFrame(update)
+            view!.cancelAnimationFrame(scheduled.frame)
+            scheduled.frame = view!.requestAnimationFrame(update)
         }
         update()
         const observer = new view.ResizeObserver(schedule)
@@ -177,9 +177,9 @@ export function useTooltipPosition(
         view.visualViewport?.addEventListener('resize', schedule)
         view.visualViewport?.addEventListener('scroll', schedule)
         return () => {
-            view.cancelAnimationFrame(frame)
+            view.cancelAnimationFrame(scheduled.frame)
             observer.disconnect()
-            moveObserver?.disconnect()
+            scheduled.moveObserver?.disconnect()
             for (const root of roots)
                 root.removeEventListener('scroll', schedule, true)
             view.removeEventListener('resize', schedule)
