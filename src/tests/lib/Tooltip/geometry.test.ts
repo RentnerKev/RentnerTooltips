@@ -180,7 +180,6 @@ test('active Escape ownership follows the newest tooltip even when an older cont
     expect(isActiveTooltip(document, 'older')).toBe(false)
 })
 
-
 test('recovers zero-size containing-block scales and converts viewport bounds including border and scroll', () => {
     const parent = {
         parentElement: null,
@@ -194,7 +193,11 @@ test('recovers zero-size containing-block scales and converts viewport bounds in
         scrollTop: 5,
     }
     const popup = {
-        ownerDocument: { defaultView: { getComputedStyle: () => ({ transform: 'scale(1.25)' }) } },
+        ownerDocument: {
+            defaultView: {
+                getComputedStyle: () => ({ transform: 'scale(1.25)' }),
+            },
+        },
         parentElement: parent,
         getBoundingClientRect: () => rect(0, 0, 125, 50),
         offsetWidth: 100,
@@ -202,13 +205,27 @@ test('recovers zero-size containing-block scales and converts viewport bounds in
     } as unknown as HTMLElement
     const origin = fixedTooltipOrigin(popup)
     expect(origin).toEqual({ x: 37.5, y: 27.5, scaleX: 1.25, scaleY: 1.25 })
-    expect(relativeTooltipRect(rect(50, 40, 125, 50), origin)).toEqual(rect(10, 10, 100, 40))
+    expect(relativeTooltipRect(rect(50, 40, 125, 50), origin)).toEqual(
+        rect(10, 10, 100, 40),
+    )
 })
 
 test('reports padded available heights for vertical and horizontal content constraints', () => {
-    const vertical = computeTooltipGeometry(rect(100, 10, 40, 20), 200, 1000, rect(0, 0, 320, 280), { side: 'top', collisionPadding: 8 })
+    const vertical = computeTooltipGeometry(
+        rect(100, 10, 40, 20),
+        200,
+        1000,
+        rect(0, 0, 320, 280),
+        { side: 'top', collisionPadding: 8 },
+    )
     expect(vertical.side).toBe('bottom')
     expect(vertical.availableHeight).toBe(228)
-    const horizontal = computeTooltipGeometry(rect(100, 10, 40, 20), 200, 1000, rect(0, 0, 320, 280), { side: 'right', collisionPadding: 8 })
+    const horizontal = computeTooltipGeometry(
+        rect(100, 10, 40, 20),
+        200,
+        1000,
+        rect(0, 0, 320, 280),
+        { side: 'right', collisionPadding: 8 },
+    )
     expect(horizontal.availableHeight).toBe(264)
 })

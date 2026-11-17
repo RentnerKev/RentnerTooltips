@@ -103,44 +103,64 @@ function Fixture({ overflow = false }: { overflow?: boolean }) {
             <p id="persistent-description">Existing description</p>
             <div ref={setShadowHost} data-testid="native-shadow-host" />
             <div style={{ height: 30 }} />
-            {overflow && (<TooltipProvider delayDuration={0}>
-                <CustomTooltip
-                    content={'UnbrokenToken'.repeat(500)}
-                    side="bottom"
-                    align="start"
-                    collisionPadding={8}
-                >
-                    <button type="button" data-testid="long-token-trigger" style={{ position: 'fixed', left: '35%', top: 80 }}>
-                        Long token
-                    </button>
-                </CustomTooltip>
-                <CustomTooltip
-                    content={'A very long tooltip description with readable words. '.repeat(300)}
-                    side="right"
-                    collisionPadding={8}
-                >
-                    <button type="button" data-testid="long-prose-trigger" style={{ position: 'fixed', left: '35%', top: 80 }}>
-                        Long prose
-                    </button>
-                </CustomTooltip>
-                <CustomTooltip
-                    content={'UnconstrainedToken'.repeat(500)}
-                    avoidCollisions={false}
-                >
-                    <button type="button" data-testid="long-unconstrained-trigger" style={{ position: 'fixed', left: '35%', top: 80 }}>
-                        Long unconstrained
-                    </button>
-                </CustomTooltip>
-                <CustomTooltip
-                    content={'CustomToken'.repeat(500)}
-                    classNames={{ content: 'whitespace-nowrap border p-2' }}
-                    collisionPadding={8}
-                >
-                    <button type="button" data-testid="long-custom-trigger" style={{ position: 'fixed', left: '35%', top: 80 }}>
-                        Long custom
-                    </button>
-                </CustomTooltip>
-            </TooltipProvider>)}
+            {overflow && (
+                <TooltipProvider delayDuration={0}>
+                    <CustomTooltip
+                        content={'UnbrokenToken'.repeat(500)}
+                        side="bottom"
+                        align="start"
+                        collisionPadding={8}
+                    >
+                        <button
+                            type="button"
+                            data-testid="long-token-trigger"
+                            style={{ position: 'fixed', left: '35%', top: 80 }}
+                        >
+                            Long token
+                        </button>
+                    </CustomTooltip>
+                    <CustomTooltip
+                        content={'A very long tooltip description with readable words. '.repeat(
+                            300,
+                        )}
+                        side="right"
+                        collisionPadding={8}
+                    >
+                        <button
+                            type="button"
+                            data-testid="long-prose-trigger"
+                            style={{ position: 'fixed', left: '35%', top: 80 }}
+                        >
+                            Long prose
+                        </button>
+                    </CustomTooltip>
+                    <CustomTooltip
+                        content={'UnconstrainedToken'.repeat(500)}
+                        avoidCollisions={false}
+                    >
+                        <button
+                            type="button"
+                            data-testid="long-unconstrained-trigger"
+                            style={{ position: 'fixed', left: '35%', top: 80 }}
+                        >
+                            Long unconstrained
+                        </button>
+                    </CustomTooltip>
+                    <CustomTooltip
+                        content={'CustomToken'.repeat(500)}
+                        classNames={{ content: 'whitespace-nowrap border p-2' }}
+                        collisionPadding={8}
+                    >
+                        <button
+                            type="button"
+                            data-testid="long-custom-trigger"
+                            style={{ position: 'fixed', left: '35%', top: 80 }}
+                        >
+                            Long custom
+                        </button>
+                    </CustomTooltip>
+                </TooltipProvider>
+            )}
             <TooltipProvider delayDuration={100}>
                 {visible && (
                     <>
@@ -289,7 +309,10 @@ function Fixture({ overflow = false }: { overflow?: boolean }) {
                             }}
                             data-testid="transformed-container"
                         >
-                            <div ref={setPortal} data-testid="transformed-portals" />
+                            <div
+                                ref={setPortal}
+                                data-testid="transformed-portals"
+                            />
                             <CustomTooltip
                                 content="Transformed help"
                                 portalContainer={portal}

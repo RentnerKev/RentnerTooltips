@@ -94,7 +94,10 @@ export function useTooltipPosition(
                 Number.parseFloat(contentStyle.borderBottomWidth)
             const next = {
                 ...geometry,
-                contentMaxHeight: Math.max(0, geometry.availableHeight - contentChrome),
+                contentMaxHeight: Math.max(
+                    0,
+                    geometry.availableHeight - contentChrome,
+                ),
                 separateDescription:
                     trigger!.getRootNode() !== positioner!.getRootNode(),
                 style: {

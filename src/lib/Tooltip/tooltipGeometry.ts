@@ -236,8 +236,12 @@ export function fixedTooltipOrigin(positioner: HTMLElement) {
     }
     // CSS zoom scales fixed descendants even without a fixed containing block.
     const rect = positioner.getBoundingClientRect()
-    const scaleX = positioner.offsetWidth ? rect.width / positioner.offsetWidth : 1
-    const scaleY = positioner.offsetHeight ? rect.height / positioner.offsetHeight : scaleX
+    const scaleX = positioner.offsetWidth
+        ? rect.width / positioner.offsetWidth
+        : 1
+    const scaleY = positioner.offsetHeight
+        ? rect.height / positioner.offsetHeight
+        : scaleX
     return { x: 0, y: 0, scaleX: scaleX || 1, scaleY: scaleY || 1 }
 }
 

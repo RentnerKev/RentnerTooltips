@@ -86,7 +86,10 @@ function NativeTooltip({
                                 .join(' ')}
                             style={state.contentStyle}
                         >
-                            <div data-tooltip-body="" style={state.contentBodyStyle}>
+                            <div
+                                data-tooltip-body=""
+                                style={state.contentBodyStyle}
+                            >
                                 {content}
                             </div>
                             {state.defaults.showArrow !== false && (
