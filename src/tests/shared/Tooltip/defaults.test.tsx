@@ -96,3 +96,21 @@ test('replaces disabled trigger visuals while preserving legacy classes and keyb
     expect(markup).toContain('tabindex="0"')
     expect(markup).toContain('aria-disabled="true"')
 })
+
+
+function OverflowProbe(props: Omit<TooltipProps, 'children' | 'content'>) {
+    const { state } = useCustomTooltipLogic(props)
+    return <div className={state.contentClassName} style={state.contentBodyStyle} />
+}
+
+test('wraps default tokens, keeps content non-scrolling, and preserves visual replacement and sizing opt-out', () => {
+    const normal = renderToStaticMarkup(<OverflowProbe />)
+    expect(normal).toContain('[overflow-wrap:anywhere]')
+    expect(normal).toContain('overflow:hidden')
+    const replaced = renderToStaticMarkup(<OverflowProbe classNames={{ content: 'whitespace-nowrap' }} />)
+    expect(replaced).toContain('whitespace-nowrap')
+    expect(replaced).not.toContain('[overflow-wrap:anywhere]')
+    const unbounded = renderToStaticMarkup(<TooltipProvider avoidCollisions={false}><OverflowProbe /></TooltipProvider>)
+    expect(unbounded).not.toContain('overflow:hidden')
+    expect(unbounded).not.toContain('max-height')
+})

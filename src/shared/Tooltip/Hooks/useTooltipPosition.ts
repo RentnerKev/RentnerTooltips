@@ -23,6 +23,7 @@ export function useTooltipPosition(
         | (TooltipGeometry & {
               style: CSSProperties
               separateDescription: boolean
+              contentMaxHeight: number
           })
         | null
     >(null)
@@ -85,8 +86,15 @@ export function useTooltipPosition(
                 options,
                 view!.getComputedStyle(trigger!).direction === 'rtl',
             )
+            const contentStyle = view!.getComputedStyle(content!)
+            const contentChrome =
+                Number.parseFloat(contentStyle.paddingTop) +
+                Number.parseFloat(contentStyle.paddingBottom) +
+                Number.parseFloat(contentStyle.borderTopWidth) +
+                Number.parseFloat(contentStyle.borderBottomWidth)
             const next = {
                 ...geometry,
+                contentMaxHeight: Math.max(0, geometry.availableHeight - contentChrome),
                 separateDescription:
                     trigger!.getRootNode() !== positioner!.getRootNode(),
                 style: {

@@ -115,6 +115,12 @@ export function useCustomTooltipLogic({
             ...interaction.state,
             position,
             contentStyle,
+            contentBodyStyle: {
+                maxHeight: defaults.avoidCollisions === false
+                    ? undefined
+                    : position?.contentMaxHeight,
+                overflow: defaults.avoidCollisions === false ? undefined : 'hidden',
+            },
             providerDepth,
             design,
             defaults,

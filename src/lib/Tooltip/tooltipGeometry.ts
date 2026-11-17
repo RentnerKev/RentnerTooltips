@@ -206,12 +206,19 @@ export function fixedTooltipOrigin(positioner: HTMLElement) {
         ) {
             const rect = parent.getBoundingClientRect()
             const element = parent as HTMLElement
+            // Fixed popup children do not give an otherwise empty portal root
+            // any dimensions. Measure the popup to recover that axis's scale.
+            const popupRect = positioner.getBoundingClientRect()
             const scaleX = element.offsetWidth
                 ? rect.width / element.offsetWidth
-                : 1
+                : positioner.offsetWidth
+                  ? popupRect.width / positioner.offsetWidth
+                  : 1
             const scaleY = element.offsetHeight
                 ? rect.height / element.offsetHeight
-                : 1
+                : positioner.offsetHeight
+                  ? popupRect.height / positioner.offsetHeight
+                  : scaleX
             return {
                 x:
                     rect.left +
@@ -227,7 +234,11 @@ export function fixedTooltipOrigin(positioner: HTMLElement) {
         }
         parent = composedParent(parent)
     }
-    return { x: 0, y: 0, scaleX: 1, scaleY: 1 }
+    // CSS zoom scales fixed descendants even without a fixed containing block.
+    const rect = positioner.getBoundingClientRect()
+    const scaleX = positioner.offsetWidth ? rect.width / positioner.offsetWidth : 1
+    const scaleY = positioner.offsetHeight ? rect.height / positioner.offsetHeight : scaleX
+    return { x: 0, y: 0, scaleX: scaleX || 1, scaleY: scaleY || 1 }
 }
 
 export function relativeTooltipRect(
