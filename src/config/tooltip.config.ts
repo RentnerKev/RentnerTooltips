@@ -4,7 +4,7 @@ export const defaultTooltipDesign: Required<TooltipCustomDesign> = {
     baseClasses:
         'rounded-rentner-control border border-rentner-border bg-rentner-surface font-medium text-rentner-foreground shadow-xl',
     animationClasses: 'motion-safe:animate-tooltip-enter',
-    contentClasses: '',
+    contentClasses: '[overflow-wrap:anywhere]',
     arrowClasses: 'fill-rentner-surface stroke-rentner-border',
 }
 

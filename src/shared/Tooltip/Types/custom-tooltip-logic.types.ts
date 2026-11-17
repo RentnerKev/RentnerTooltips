@@ -11,6 +11,7 @@ export interface CustomTooltipLogicResult {
     state: ReturnType<typeof useTooltipInteraction>['state'] & {
         position: ReturnType<typeof useTooltipPosition>
         contentStyle: CSSProperties
+        contentBodyStyle: CSSProperties
         providerDepth: number
         design: Required<TooltipCustomDesign>
         contentClassName: string
