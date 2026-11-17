@@ -197,6 +197,14 @@ tooltip-local customization behave as before, including standalone tooltips.
 
 ### Collision and portal configuration
 
+Default tooltip content wraps long unbroken text within the available width.
+With collision handling enabled, the inner content is clipped to the available
+height after padding and border while its complete accessible description stays
+available. The arrow remains outside that clipping region; no focusable scroll
+area is introduced. Use concise tooltip content for information that should be
+fully visible. `avoidCollisions={false}` opts out of this height constraint.
+Custom replacement content classes can override the default word wrapping.
+
 ```tsx
 <CustomTooltip
     content="Kept inside the panel"
