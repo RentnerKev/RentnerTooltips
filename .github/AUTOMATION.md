@@ -1,8 +1,18 @@
 # Repository automation
 
-CI cancels superseded checks. npm publication serializes the stable `latest` destination; release notes serialize each release without cancelling writes. Releases must be published stable `vMAJOR.MINOR.PATCH` tags whose committed package identity and exact tag commit match a main ancestor. The pipeline does not rewrite versions.
+CI cancels superseded checks. npm publication serializes the stable `latest` destination. Draft banner preparation and notes updates serialize writes for the same release.
+
+## Stable GitHub releases
+
+[Release immutability](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes) is enabled for this repository. GitHub applies it to future publications.
+
+1. Push a stable `vMAJOR.MINOR.PATCH` tag at a commit on `main` and save a GitHub release draft for the tag. Add any release assets and author notes to the draft.
+2. Run `gh workflow run prepare-release-draft.yml --ref main -f tag=vMAJOR.MINOR.PATCH` with the actual tag. Wait for the workflow to verify the banner from the exact tagged source. A retry reuses an asset with the same SHA-256 digest and size. A conflicting asset needs to be corrected in the draft before retrying.
+3. Publish the prepared draft on GitHub. GitHub locks the tag and assets and generates a release attestation. Use `gh release verify vMAJOR.MINOR.PATCH` with the actual tag to verify it. Publication triggers the existing npm and changelog workflows. The changelog updates the notes and includes the banner link when the asset is present.
 
 Recovery uses the current main workflow and trusted main automation to verify and publish an existing published stable release tag: `gh workflow run npm-publish.yml --ref main -f tag=vMAJOR.MINOR.PATCH`. Replace the tag placeholder with the existing release tag. The validated exact-tag source receives frozen root and playground installs before full verification; recovery retains ancestry, identity, integrity, channel and provenance checks and never retags or changes versions.
+
+## Automation behavior
 
 Privileged scripts execute from trusted main, while release builds use the validated exact tag. Dependabot metadata executes trusted base code. Auto-merge verifies the current run/attempt, workflow identity and unchanged definition, bot-authored verified commits, exact head, and one digest-bearing minor/patch marker before approving that commit and enabling guarded auto-merge. Artifacts are data, never executable publisher input.
 
@@ -10,7 +20,7 @@ Dependabot Rebase checks open Dependabot PRs with auto-merge enabled after main 
 
 Rebase setup requires an Actions repository secret named `DEPENDABOT_REBASE_TOKEN`. Use a fine-grained personal access token from an account with push access, limited to the intended package repositories, with Contents read and Pull requests write permissions. The built-in GitHub Actions app token is rejected by Dependabot comment commands even with contents write permission. The workflow token therefore stays read-only; the personal token is exposed only to the trusted rebase script step. Missing credentials and app identities fail before any rebase request is posted. Keep the token valid and rotate the secret before expiration.
 
-Publication compares the packed tarball's SHA-512 integrity with npm, refuses version collisions, and verifies the resulting stable channel. Registry visibility is checked at most 61 times with five-second intervals: at most 300 seconds of retry delays, plus request time. Only absent artifact visibility or pending channel propagation is retried; conflicting identities, channel rollback, and registry errors fail immediately. Existing banner assets are reused only with a matching SHA-256 digest and are never clobbered. Managed release notes replace only their explicit marker section; author notes remain outside it. Concurrent author changes detected before an update cause a safe failure. GitHub does not offer an atomic body compare-and-swap through this API; maintainers should avoid simultaneous manual and automated edits.
+Publication compares the packed tarball's SHA-512 integrity with npm, refuses version collisions, and verifies the resulting stable channel. Registry visibility is checked at most 61 times with five-second intervals: at most 300 seconds of retry delays, plus request time. Only absent artifact visibility or pending channel propagation is retried; conflicting identities, channel rollback, and registry errors fail immediately. Managed release notes replace only their explicit marker section; author notes remain outside it. Concurrent author changes detected before an update cause a safe failure. GitHub does not offer an atomic body compare-and-swap through this API; maintainers should avoid simultaneous manual and automated edits.
 
 PR title checks use read-only `pull_request_target` and trusted base code without a PR checkout. Checkout uses GitHub's event-pinned `github.sha` from the trusted default branch (`main`), rather than the potentially stale PR base SHA, so later metadata edits use current trusted automation. PR titles remain environment data; PR code is never checked out or executed. Workflow lint executes a checksum-verified actionlint installer from trusted base. CI scripts are TypeScript; shell only orchestrates download, checksum verification and extraction.
 

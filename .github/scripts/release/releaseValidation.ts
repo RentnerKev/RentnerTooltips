@@ -3,18 +3,17 @@ import type {
     PackedArtifact,
     ReleaseEvent,
     ReleaseMetadata,
+    ReleaseSummary,
 } from './Types/release.types.ts'
 import { isRecord, positiveInteger } from '../lib/runtime.ts'
 
-export function isReleaseMetadata(value: unknown): value is ReleaseMetadata {
+export function isReleaseSummary(value: unknown): value is ReleaseSummary {
     return (
         isRecord(value) &&
         positiveInteger(value.id) &&
         typeof value.tag_name === 'string' &&
         typeof value.draft === 'boolean' &&
         typeof value.prerelease === 'boolean' &&
-        typeof value.published_at === 'string' &&
-        (value.body === null || typeof value.body === 'string') &&
         Array.isArray(value.assets) &&
         value.assets.every(
             (asset: unknown) =>
@@ -26,6 +25,15 @@ export function isReleaseMetadata(value: unknown): value is ReleaseMetadata {
                 asset.size >= 0 &&
                 (asset.digest === null || typeof asset.digest === 'string'),
         )
+    )
+}
+
+export function isReleaseMetadata(value: unknown): value is ReleaseMetadata {
+    return (
+        isRecord(value) &&
+        isReleaseSummary(value) &&
+        typeof value.published_at === 'string' &&
+        (value.body === null || typeof value.body === 'string')
     )
 }
 

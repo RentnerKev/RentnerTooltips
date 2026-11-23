@@ -1,0 +1,50 @@
+name: Prepare Release Draft
+run-name: Prepare release draft ${{ inputs.tag }}
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: Existing stable tag with a saved release draft (vMAJOR.MINOR.PATCH)
+                required: true
+                type: string
+permissions:
+    contents: read
+concurrency:
+    group: release-notes-${{ github.repository }}-${{ inputs.tag }}
+    cancel-in-progress: false
+jobs:
+    attach-banner:
+        if: github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout trusted main automation
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  ref: ${{ github.sha }}
+                  path: automation
+                  persist-credentials: false
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+              with:
+                  bun-version: 1.4.4
+            - name: Validate stable tag
+              id: release
+              env:
+                  RELEASE_TAG: ${{ inputs.tag }}
+              run: bun automation/.github/scripts/release/draft-banner.ts --validate-tag
+            - name: Checkout exact release tag
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  ref: refs/tags/${{ steps.release.outputs.tag }}
+                  path: source
+                  fetch-depth: 0
+                  persist-credentials: false
+            - name: Attach and verify the release banner on the draft
+              working-directory: source
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_TAG: ${{ steps.release.outputs.tag }}
+              run: bun "$GITHUB_WORKSPACE/automation/.github/scripts/release/draft-banner.ts"
