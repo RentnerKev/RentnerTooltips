@@ -4,7 +4,7 @@ CI cancels superseded checks. npm publication serializes the stable `latest` des
 
 ## Stable GitHub releases
 
-[Release immutability](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes) is enabled for this repository. GitHub applies it to future publications.
+Enable [release immutability](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes) in repository settings after the draft workflow reaches `main`. GitHub applies the setting to future publications.
 
 1. Push a stable `vMAJOR.MINOR.PATCH` tag at a commit on `main` and save a GitHub release draft for the tag. Add any release assets and author notes to the draft.
 2. Run `gh workflow run prepare-release-draft.yml --ref main -f tag=vMAJOR.MINOR.PATCH` with the actual tag. Wait for the workflow to verify the banner from the exact tagged source. A retry reuses an asset with the same SHA-256 digest and size. A conflicting asset needs to be corrected in the draft before retrying.
