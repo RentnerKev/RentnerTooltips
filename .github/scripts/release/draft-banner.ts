@@ -18,12 +18,15 @@ import { stableVersion, verifyTagCheckout } from './identity.ts'
 import { releaseBannerName } from './notes.ts'
 import { isReleaseSummary } from './releaseValidation.ts'
 
-export async function attachDraftBanner(
+export function attachDraftBanner(
     releaseId: number,
     tag: string,
-    banner: Uint8Array<ArrayBuffer>,
+    banner: Buffer,
     operations: DraftBannerOperations,
-): Promise<void> {
+): void {
+    const pngSignature = Buffer.from('89504e470d0a1a0a', 'hex')
+    if (!banner.subarray(0, pngSignature.length).equals(pngSignature))
+        throw new Error('Expected a PNG release banner')
     const digest = `sha256:${createHash('sha256').update(banner).digest('hex')}`
 
     function hasMatchingBanner(release: ReleaseSummary): boolean {
@@ -53,7 +56,7 @@ export async function attachDraftBanner(
     }
 
     if (hasMatchingBanner(operations.readRelease())) return
-    await operations.uploadBanner(banner)
+    operations.uploadBanner(banner)
     if (!hasMatchingBanner(operations.readRelease()))
         throw new Error('Uploaded draft banner could not be verified')
 }
@@ -85,28 +88,28 @@ if (isMain(import.meta.url)) {
             { minBytes: 1, maxBytes: 10_000_000 },
         )
         const endpoint = `repos/${repository}/releases/${releaseId}`
-        await attachDraftBanner(releaseId, tag, new Uint8Array(banner), {
+        attachDraftBanner(releaseId, tag, banner, {
             readRelease: () => api(endpoint, isReleaseSummary),
-            uploadBanner: async (contents) => {
-                const url = new URL(
-                    `https://uploads.github.com/${endpoint}/assets`,
+            uploadBanner: (contents) => {
+                command(
+                    'gh',
+                    [
+                        'api',
+                        `https://uploads.github.com/${endpoint}/assets?name=${releaseBannerName}`,
+                        '--hostname',
+                        'github.com',
+                        '--method',
+                        'POST',
+                        '--header',
+                        'Content-Type: image/png',
+                        '--header',
+                        `Content-Length: ${contents.length}`,
+                        '--input',
+                        '-',
+                        '--silent',
+                    ],
+                    contents,
                 )
-                url.searchParams.set('name', releaseBannerName)
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${requiredEnv('GH_TOKEN')}`,
-                        'Content-Type': 'image/png',
-                    },
-                    body: contents,
-                    redirect: 'error',
-                    signal: AbortSignal.timeout(30_000),
-                })
-                await response.body?.cancel()
-                if (response.status !== 201)
-                    throw new Error(
-                        `Draft banner upload failed (HTTP ${response.status})`,
-                    )
             },
         })
         console.log(

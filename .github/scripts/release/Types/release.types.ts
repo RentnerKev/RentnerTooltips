@@ -13,7 +13,7 @@ export interface ReleaseMetadata extends ReleaseSummary {
 
 export interface DraftBannerOperations {
     readRelease: () => ReleaseSummary
-    uploadBanner: (banner: Uint8Array<ArrayBuffer>) => Promise<void>
+    uploadBanner: (banner: Buffer) => void
 }
 
 export interface ReleaseEvent {
