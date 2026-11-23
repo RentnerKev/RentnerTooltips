@@ -1,11 +1,19 @@
-export interface ReleaseMetadata {
+export interface ReleaseSummary {
     id: number
     tag_name: string
     draft: boolean
     prerelease: boolean
+    assets: { id: number; name: string; size: number; digest: string | null }[]
+}
+
+export interface ReleaseMetadata extends ReleaseSummary {
     published_at: string
     body: string | null
-    assets: { id: number; name: string; size: number; digest: string | null }[]
+}
+
+export interface DraftBannerOperations {
+    readRelease: () => ReleaseSummary
+    uploadBanner: (banner: Buffer) => void
 }
 
 export interface ReleaseEvent {

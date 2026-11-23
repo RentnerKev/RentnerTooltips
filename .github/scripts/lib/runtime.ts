@@ -50,7 +50,7 @@ export function output(name: string, value: string): void {
 export function command(
     program: string,
     args: readonly string[],
-    input?: string,
+    input?: string | Buffer,
 ): string {
     try {
         return execFileSync(program, [...args], {

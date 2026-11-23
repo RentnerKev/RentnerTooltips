@@ -3,6 +3,7 @@ import type { ReleaseMetadata } from './Types/release.types.ts'
 
 export const startMarker = '<!-- rentner-release-notes:start -->'
 export const endMarker = '<!-- rentner-release-notes:end -->'
+export const releaseBannerName = 'release-banner.png'
 
 export function readNotes(path: string): string {
     const notes = readRegularFile(path, {
@@ -25,7 +26,12 @@ export function releaseBody(
     repository: string,
     server: string,
 ): string {
-    const banner = `![RentnerKev release banner](${server}/${repository}/releases/download/${release.tag_name}/release-banner.png)`
+    const bannerLink = `![RentnerKev release banner](${server}/${repository}/releases/download/${release.tag_name}/${releaseBannerName})`
+    const banner = release.assets.some(
+        (asset) => asset.name === releaseBannerName && asset.size > 0,
+    )
+        ? `${bannerLink}\n\n`
+        : ''
     const start = existing.indexOf(startMarker)
     const end = existing.indexOf(endMarker)
     if (
@@ -43,7 +49,7 @@ export function releaseBody(
             ? existing
             : existing.slice(0, start) + existing.slice(end + endMarker.length)
     )
-        .replace(banner, '')
+        .replace(bannerLink, '')
         .trim()
     const date = new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -51,7 +57,7 @@ export function releaseBody(
         year: 'numeric',
         timeZone: 'UTC',
     }).format(new Date(release.published_at))
-    const body = `${banner}\n\n${authorNotes ? `${authorNotes}\n\n` : ''}${startMarker}\n# Release · \`${release.tag_name}\`\n\n> **Stable Release** · Published on **${date}**\n\n${notes.trim()}\n${endMarker}\n`
+    const body = `${banner}${authorNotes ? `${authorNotes}\n\n` : ''}${startMarker}\n# Release · \`${release.tag_name}\`\n\n> **Stable Release** · Published on **${date}**\n\n${notes.trim()}\n${endMarker}\n`
     if (Buffer.byteLength(body) > 1_000_000 || body.includes('\0'))
         throw new Error('Release body exceeds its safe size')
     return body

@@ -77,10 +77,21 @@ export function verifySourceCheckout(
         !validRelease(selected.release, selected.tag)
     )
         throw new Error('Release identity/channel mismatch')
+    return { ...selected, ...verifyTagCheckout(selected.tag, operations) }
+}
+
+export function verifyTagCheckout(
+    tag: string,
+    operations: Pick<
+        ReleaseCheckoutOperations,
+        'command' | 'packageName'
+    > = checkoutOperations,
+) {
+    stableVersion(tag)
     const commit = operations.command('git', [
         'rev-parse',
         '--verify',
-        `refs/tags/${selected.tag}^{commit}`,
+        `refs/tags/${tag}^{commit}`,
     ])
     if (
         !/^[a-f0-9]{40}$/.test(commit) ||
@@ -109,16 +120,16 @@ export function verifySourceCheckout(
         .command('git', [
             'ls-remote',
             'origin',
-            `refs/tags/${selected.tag}`,
-            `refs/tags/${selected.tag}^{}`,
+            `refs/tags/${tag}`,
+            `refs/tags/${tag}^{}`,
         ])
         .split('\n')
         .map((line) => line.split(/\s+/))
     const resolved =
         remote.find(([, ref]) => ref?.endsWith('^{}'))?.[0] ??
-        remote.find(([, ref]) => ref === `refs/tags/${selected.tag}`)?.[0]
-    if (resolved !== commit) throw new Error('Published tag moved')
-    return { ...selected, commit, manifest: { ...manifest } }
+        remote.find(([, ref]) => ref === `refs/tags/${tag}`)?.[0]
+    if (resolved !== commit) throw new Error('Release tag moved')
+    return { commit, manifest: { ...manifest } }
 }
 
 export function preparedManifest(source: VerifiedSourceRelease) {

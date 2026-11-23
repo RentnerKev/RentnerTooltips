@@ -8,6 +8,7 @@ import {
 } from '../../../.github/scripts/release/identity.ts'
 import {
     releaseBody,
+    releaseBannerName,
     startMarker,
     endMarker,
 } from '../../../.github/scripts/release/notes.ts'
@@ -77,7 +78,7 @@ const release: ReleaseMetadata = {
     prerelease: false,
     published_at: '2026-10-07T10:00:00Z',
     body: null,
-    assets: [],
+    assets: [{ id: 1, name: releaseBannerName, size: 128, digest: null }],
 }
 
 describe('privileged automation provenance', () => {
@@ -222,6 +223,18 @@ describe('release and metadata policy', () => {
                     'https://github.com',
                 ),
             ).toThrow()
+    })
+    test('updates release notes without linking an absent banner', () => {
+        const body = releaseBody(
+            'Maintainer highlights',
+            'Generated changes',
+            { ...release, assets: [] },
+            'RentnerKev/RentnerTooltips',
+            'https://github.com',
+        )
+        expect(body).toContain('Maintainer highlights')
+        expect(body).toContain('Generated changes')
+        expect(body).not.toContain(releaseBannerName)
     })
     test('accepts established commit types and rejects controls and empty descriptions', () => {
         for (const title of [
