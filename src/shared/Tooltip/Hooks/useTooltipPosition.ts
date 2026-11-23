@@ -11,6 +11,37 @@ import {
     tooltipReferenceHidden,
 } from '../../../lib/Tooltip/tooltipGeometry.ts'
 
+type TooltipPositionState = TooltipGeometry & {
+    style: CSSProperties
+    separateDescription: boolean
+    contentMaxHeight: number
+}
+
+function isSameTooltipPosition(
+    a: TooltipPositionState,
+    b: TooltipPositionState,
+): boolean {
+    return (
+        a.x === b.x &&
+        a.y === b.y &&
+        a.side === b.side &&
+        a.align === b.align &&
+        a.arrowX === b.arrowX &&
+        a.arrowY === b.arrowY &&
+        a.arrowHidden === b.arrowHidden &&
+        a.detached === b.detached &&
+        a.availableWidth === b.availableWidth &&
+        a.availableHeight === b.availableHeight &&
+        a.transformOrigin === b.transformOrigin &&
+        a.triggerWidth === b.triggerWidth &&
+        a.triggerHeight === b.triggerHeight &&
+        a.contentMaxHeight === b.contentMaxHeight &&
+        a.separateDescription === b.separateDescription &&
+        a.style.maxWidth === b.style.maxWidth &&
+        a.style.visibility === b.style.visibility
+    )
+}
+
 export function useTooltipPosition(
     isOpen: boolean,
     triggerNode: HTMLElement | null,
@@ -19,14 +50,7 @@ export function useTooltipPosition(
     defaults: TooltipDefaults,
     portalDocument: Document | null,
 ) {
-    const [position, setPosition] = useState<
-        | (TooltipGeometry & {
-              style: CSSProperties
-              separateDescription: boolean
-              contentMaxHeight: number
-          })
-        | null
-    >(null)
+    const [position, setPosition] = useState<TooltipPositionState | null>(null)
     const {
         side,
         sideOffset,
@@ -117,13 +141,14 @@ export function useTooltipPosition(
                               ),
                     visibility:
                         hideWhenDetached &&
-                        (geometry.detached || tooltipReferenceHidden(trigger!))
+                        (geometry.detached ||
+                            tooltipReferenceHidden(trigger!, anchorRect))
                             ? ('hidden' as const)
                             : undefined,
                 },
             }
             setPosition((previous) =>
-                previous && JSON.stringify(previous) === JSON.stringify(next)
+                previous && isSameTooltipPosition(previous, next)
                     ? previous
                     : next,
             )
@@ -145,20 +170,12 @@ export function useTooltipPosition(
                 if (anchorRect.width > 0 && anchorRect.height > 0) {
                     const root = trigger!.ownerDocument.documentElement
                     // Observe layout shifts without a permanent RAF measurement loop.
-                    const margins = [
-                        -Math.floor(anchorRect.top),
-                        -Math.floor(root.clientWidth - anchorRect.right),
-                        -Math.floor(root.clientHeight - anchorRect.bottom),
-                        -Math.floor(anchorRect.left),
-                    ]
                     scheduled.moveObserver = new view!.IntersectionObserver(
                         (entries) => {
                             if (entries[0]?.intersectionRatio !== 1) schedule()
                         },
                         {
-                            rootMargin: margins
-                                .map((value) => `${value}px`)
-                                .join(' '),
+                            rootMargin: `${-Math.floor(anchorRect.top)}px ${-Math.floor(root.clientWidth - anchorRect.right)}px ${-Math.floor(root.clientHeight - anchorRect.bottom)}px ${-Math.floor(anchorRect.left)}px`,
                             threshold: 1,
                         },
                     )

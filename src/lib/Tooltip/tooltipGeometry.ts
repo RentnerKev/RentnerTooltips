@@ -5,6 +5,17 @@ import type {
     TooltipRect,
 } from './Types/tooltip-geometry.types.ts'
 
+const OPPOSITE_SIDE = {
+    top: 'bottom',
+    bottom: 'top',
+    left: 'right',
+    right: 'left',
+} as const
+
+const CONTAIN_REGEX = /paint|layout|strict|content/
+const WILL_CHANGE_REGEX = /transform|translate|scale|rotate|perspective|filter/
+const OVERFLOW_CLIP_REGEX = /auto|scroll|hidden|clip/
+
 function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(value, Math.max(min, max)))
 }
@@ -18,40 +29,60 @@ export function computeTooltipGeometry(
     rtl = false,
 ): TooltipGeometry {
     const padding = options.collisionPadding ?? 0
-    const edges =
-        typeof padding === 'number'
-            ? { top: padding, right: padding, bottom: padding, left: padding }
-            : { top: 0, right: 0, bottom: 0, left: 0, ...padding }
-    const clip = {
-        top: boundary.top + edges.top,
-        right: boundary.right - edges.right,
-        bottom: boundary.bottom - edges.bottom,
-        left: boundary.left + edges.left,
+    let padTop: number
+    let padRight: number
+    let padBottom: number
+    let padLeft: number
+    if (typeof padding === 'number') {
+        padTop = padding
+        padRight = padding
+        padBottom = padding
+        padLeft = padding
+    } else {
+        padTop = padding.top ?? 0
+        padRight = padding.right ?? 0
+        padBottom = padding.bottom ?? 0
+        padLeft = padding.left ?? 0
     }
+    const clipTop = boundary.top + padTop
+    const clipRight = boundary.right - padRight
+    const clipBottom = boundary.bottom - padBottom
+    const clipLeft = boundary.left + padLeft
     let side = options.side ?? 'top'
     const align = options.align ?? 'center'
     const arrowSize = options.showArrow === false ? 0 : 6
     const gap = (options.sideOffset ?? 8) + arrowSize
-    const space = {
-        top: anchor.top - clip.top,
-        right: clip.right - anchor.right,
-        bottom: clip.bottom - anchor.bottom,
-        left: anchor.left - clip.left,
-    }
-    const opposite = {
-        top: 'bottom',
-        bottom: 'top',
-        left: 'right',
-        right: 'left',
-    } as const
+    const spaceTop = anchor.top - clipTop
+    const spaceRight = clipRight - anchor.right
+    const spaceBottom = clipBottom - anchor.bottom
+    const spaceLeft = anchor.left - clipLeft
     const horizontal = side === 'top' || side === 'bottom'
     const length = horizontal ? height : width
+    const primarySpace =
+        side === 'top'
+            ? spaceTop
+            : side === 'bottom'
+              ? spaceBottom
+              : side === 'left'
+                ? spaceLeft
+                : spaceRight
+    const oppositeSpace =
+        side === 'top'
+            ? spaceBottom
+            : side === 'bottom'
+              ? spaceTop
+              : side === 'left'
+                ? spaceRight
+                : spaceLeft
+    let activeSpace = primarySpace
     if (
         options.avoidCollisions !== false &&
-        space[side] < length + gap &&
-        space[opposite[side]] > space[side]
-    )
-        side = opposite[side]
+        primarySpace < length + gap &&
+        oppositeSpace > primarySpace
+    ) {
+        side = OPPOSITE_SIDE[side]
+        activeSpace = oppositeSpace
+    }
     const verticalSide = side === 'top' || side === 'bottom'
     const effectiveAlign =
         verticalSide && rtl && align !== 'center'
@@ -80,7 +111,7 @@ export function computeTooltipGeometry(
           : anchor.bottom + gap
     if (options.avoidCollisions !== false) {
         if (verticalSide) {
-            x = clamp(x, clip.left, clip.right - width)
+            x = clamp(x, clipLeft, clipRight - width)
             if (options.sticky !== 'always')
                 x = clamp(
                     x,
@@ -88,7 +119,7 @@ export function computeTooltipGeometry(
                     anchor.right - arrowSize,
                 )
         } else {
-            y = clamp(y, clip.top, clip.bottom - height)
+            y = clamp(y, clipTop, clipBottom - height)
             if (options.sticky !== 'always')
                 y = clamp(
                     y,
@@ -120,11 +151,11 @@ export function computeTooltipGeometry(
             anchor.left >= boundary.right,
         availableWidth: Math.max(
             0,
-            verticalSide ? clip.right - clip.left : space[side] - gap,
+            verticalSide ? clipRight - clipLeft : activeSpace - gap,
         ),
         availableHeight: Math.max(
             0,
-            verticalSide ? space[side] - gap : clip.bottom - clip.top,
+            verticalSide ? activeSpace - gap : clipBottom - clipTop,
         ),
         transformOrigin: verticalSide
             ? `${arrowX}px ${side === 'top' ? height + arrowSize : -arrowSize}px`
@@ -163,16 +194,22 @@ export function tooltipBoundary(
     let right = left + (viewport?.width ?? document.documentElement.clientWidth)
     let bottom =
         top + (viewport?.height ?? document.documentElement.clientHeight)
-    const boundaries = Array.isArray(options.collisionBoundary)
-        ? options.collisionBoundary
-        : [options.collisionBoundary]
-    for (const element of boundaries) {
-        if (!element) continue
-        const rect = element.getBoundingClientRect()
-        left = Math.max(left, rect.left)
-        top = Math.max(top, rect.top)
-        right = Math.min(right, rect.right)
-        bottom = Math.min(bottom, rect.bottom)
+    const collisionBoundary = options.collisionBoundary
+    if (collisionBoundary) {
+        const count = Array.isArray(collisionBoundary)
+            ? collisionBoundary.length
+            : 1
+        for (let index = 0; index < count; index++) {
+            const element = Array.isArray(collisionBoundary)
+                ? collisionBoundary[index]
+                : collisionBoundary
+            if (!element) continue
+            const rect = element.getBoundingClientRect()
+            left = Math.max(left, rect.left)
+            top = Math.max(top, rect.top)
+            right = Math.min(right, rect.right)
+            bottom = Math.min(bottom, rect.bottom)
+        }
     }
     return {
         left,
@@ -191,32 +228,35 @@ export function fixedTooltipOrigin(positioner: HTMLElement) {
         const style = view.getComputedStyle(parent)
         if (
             style.transform !== 'none' ||
-            [style.translate, style.scale, style.rotate].some(
-                (value) => Boolean(value) && value !== 'none',
-            ) ||
+            (Boolean(style.translate) && style.translate !== 'none') ||
+            (Boolean(style.scale) && style.scale !== 'none') ||
+            (Boolean(style.rotate) && style.rotate !== 'none') ||
             style.perspective !== 'none' ||
             style.filter !== 'none' ||
             (Boolean(style.backdropFilter) &&
                 style.backdropFilter !== 'none') ||
             style.contentVisibility === 'auto' ||
-            /paint|layout|strict|content/.test(style.contain) ||
-            /transform|translate|scale|rotate|perspective|filter/.test(
-                style.willChange,
-            )
+            CONTAIN_REGEX.test(style.contain) ||
+            WILL_CHANGE_REGEX.test(style.willChange)
         ) {
             const rect = parent.getBoundingClientRect()
             const element = parent as HTMLElement
+            const elementWidth = element.offsetWidth
+            const elementHeight = element.offsetHeight
             // Fixed popup children do not give an otherwise empty portal root
-            // any dimensions. Measure the popup to recover that axis's scale.
-            const popupRect = positioner.getBoundingClientRect()
-            const scaleX = element.offsetWidth
-                ? rect.width / element.offsetWidth
-                : positioner.offsetWidth
+            // any dimensions. Measure the popup only when an axis needs recovery.
+            const popupRect =
+                !elementWidth || !elementHeight
+                    ? positioner.getBoundingClientRect()
+                    : null
+            const scaleX = elementWidth
+                ? rect.width / elementWidth
+                : positioner.offsetWidth && popupRect
                   ? popupRect.width / positioner.offsetWidth
                   : 1
-            const scaleY = element.offsetHeight
-                ? rect.height / element.offsetHeight
-                : positioner.offsetHeight
+            const scaleY = elementHeight
+                ? rect.height / elementHeight
+                : positioner.offsetHeight && popupRect
                   ? popupRect.height / positioner.offsetHeight
                   : scaleX
             return {
@@ -263,30 +303,47 @@ export function relativeTooltipRect(
     }
 }
 
-export function tooltipReferenceHidden(trigger: HTMLElement) {
-    const rect = trigger.getBoundingClientRect()
-    const boundary = tooltipBoundary(trigger, {})
+export function tooltipReferenceHidden(
+    trigger: HTMLElement,
+    anchorRect?: TooltipRect,
+) {
+    const rect = anchorRect ?? trigger.getBoundingClientRect()
+    const document = trigger.ownerDocument
+    const view = document.defaultView!
+    const viewport = view.visualViewport
+    let left = viewport?.offsetLeft ?? 0
+    let top = viewport?.offsetTop ?? 0
+    let right = left + (viewport?.width ?? document.documentElement.clientWidth)
+    let bottom =
+        top + (viewport?.height ?? document.documentElement.clientHeight)
+    if (
+        rect.right <= left ||
+        rect.left >= right ||
+        rect.bottom <= top ||
+        rect.top >= bottom
+    )
+        return true
     let parent = composedParent(trigger)
     while (parent) {
-        const style =
-            trigger.ownerDocument.defaultView!.getComputedStyle(parent)
-        const clip = parent.getBoundingClientRect()
-        if (/auto|scroll|hidden|clip/.test(style.overflowX)) {
-            boundary.left = Math.max(boundary.left, clip.left)
-            boundary.right = Math.min(boundary.right, clip.right)
-        }
-        if (/auto|scroll|hidden|clip/.test(style.overflowY)) {
-            boundary.top = Math.max(boundary.top, clip.top)
-            boundary.bottom = Math.min(boundary.bottom, clip.bottom)
+        const style = view.getComputedStyle(parent)
+        const clipsX = OVERFLOW_CLIP_REGEX.test(style.overflowX)
+        const clipsY = OVERFLOW_CLIP_REGEX.test(style.overflowY)
+        if (clipsX || clipsY) {
+            const clip = parent.getBoundingClientRect()
+            if (clipsX) {
+                left = Math.max(left, clip.left)
+                right = Math.min(right, clip.right)
+                if (rect.right <= left || rect.left >= right) return true
+            }
+            if (clipsY) {
+                top = Math.max(top, clip.top)
+                bottom = Math.min(bottom, clip.bottom)
+                if (rect.bottom <= top || rect.top >= bottom) return true
+            }
         }
         parent = composedParent(parent)
     }
-    return (
-        rect.right <= boundary.left ||
-        rect.left >= boundary.right ||
-        rect.bottom <= boundary.top ||
-        rect.top >= boundary.bottom
-    )
+    return false
 }
 
 function cross(origin: TooltipPoint, a: TooltipPoint, b: TooltipPoint) {
@@ -313,23 +370,36 @@ export function hoverHull(
         // oxlint-disable-next-line unicorn/no-array-sort
     ].sort((a, b) => a.x - b.x || a.y - b.y)
     const lower: TooltipPoint[] = []
-    const upper: TooltipPoint[] = []
-    for (const p of points) {
-        while (lower.length >= 2 && cross(lower.at(-2)!, lower.at(-1)!, p) <= 0)
+    for (let index = 0; index < points.length; index++) {
+        const p = points[index]!
+        while (
+            lower.length >= 2 &&
+            cross(lower[lower.length - 2]!, lower[lower.length - 1]!, p) <= 0
+        )
             lower.pop()
         lower.push(p)
     }
+    const upper: TooltipPoint[] = []
     for (let index = points.length - 1; index >= 0; index--) {
-        const p = points[index]
-        while (upper.length >= 2 && cross(upper.at(-2)!, upper.at(-1)!, p) <= 0)
+        const p = points[index]!
+        while (
+            upper.length >= 2 &&
+            cross(upper[upper.length - 2]!, upper[upper.length - 1]!, p) <= 0
+        )
             upper.pop()
         upper.push(p)
     }
-    return [...lower.slice(0, -1), ...upper.slice(0, -1)]
+    lower.pop()
+    upper.pop()
+    for (let index = 0; index < upper.length; index++) lower.push(upper[index]!)
+    return lower
 }
 
 export function insideHoverHull(point: TooltipPoint, hull: TooltipPoint[]) {
-    return hull.every(
-        (p, index) => cross(p, hull[(index + 1) % hull.length], point) >= 0,
-    )
+    const length = hull.length
+    for (let index = 0; index < length; index++) {
+        const next = index + 1 === length ? 0 : index + 1
+        if (cross(hull[index]!, hull[next]!, point) < 0) return false
+    }
+    return true
 }
