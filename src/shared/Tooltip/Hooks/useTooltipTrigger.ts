@@ -8,8 +8,9 @@ function composeHandler<E extends { defaultPrevented: boolean }>(
     child: ((event: E) => void) | undefined,
     own: (event: E) => void,
 ) {
+    if (!child) return own
     return (event: E) => {
-        child?.(event)
+        child(event)
         if (!event.defaultPrevented) own(event)
     }
 }
@@ -22,18 +23,19 @@ export function useTooltipTrigger(
     const childRef = child.props.ref
     const triggerRef = refs.setTriggerRef
     const setTriggerRef = useMemo(
-        () => composeTooltipRefs(triggerRef, childRef),
+        () =>
+            childRef ? composeTooltipRefs(triggerRef, childRef) : triggerRef,
         [childRef, triggerRef],
     )
+    const childDescribedBy = child.props['aria-describedby']
+    const ariaDescribedBy = state.isOpen
+        ? childDescribedBy
+            ? `${childDescribedBy} ${state.id}`
+            : state.id
+        : childDescribedBy || undefined
     return cloneElement(child, {
         ref: setTriggerRef,
-        'aria-describedby':
-            [
-                child.props['aria-describedby'],
-                state.isOpen ? state.id : undefined,
-            ]
-                .filter(Boolean)
-                .join(' ') || undefined,
+        'aria-describedby': ariaDescribedBy,
         'data-state': state.dataState,
         onFocus: composeHandler(child.props.onFocus, handler.handleFocus),
         onBlur: composeHandler(child.props.onBlur, handler.close),

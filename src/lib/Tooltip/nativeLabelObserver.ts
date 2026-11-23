@@ -8,6 +8,24 @@ import type {
 const rootObservers = new WeakMap<Node, RootObserver>()
 const generatedLabelIds = new WeakMap<HTMLLabelElement, GeneratedLabelId>()
 
+const ASSOCIATION_SELECTOR =
+    'label, button, input, select, textarea, meter, output, progress, [id], [data-tooltip-disabled-trigger]'
+
+function hasAssociationNode(nodes: NodeList): boolean {
+    for (let index = 0; index < nodes.length; index++) {
+        const node = nodes[index]
+        if (!node || node.nodeType !== 1) continue
+        const element = node as Element
+        if (
+            element.matches(ASSOCIATION_SELECTOR) ||
+            element.querySelector(ASSOCIATION_SELECTOR)
+        ) {
+            return true
+        }
+    }
+    return false
+}
+
 function affectsLabels(record: MutationRecord) {
     if (record.type === 'attributes') return true
     if (
@@ -19,21 +37,10 @@ function affectsLabels(record: MutationRecord) {
     // Text edits need no resync: aria-labelledby already references live text.
     // An id-less control can also steal the first-control association of a
     // wrapping label, even when inserted outside our proxy wrapper.
-    const associationSelector =
-        'label, button, input, select, textarea, meter, output, progress, [id], [data-tooltip-disabled-trigger]'
-    for (const nodes of [record.addedNodes, record.removedNodes]) {
-        for (const node of nodes) {
-            if (node.nodeType !== 1) continue
-            const element = node as Element
-            if (
-                element.matches(associationSelector) ||
-                element.querySelector(associationSelector)
-            ) {
-                return true
-            }
-        }
-    }
-    return false
+    return (
+        hasAssociationNode(record.addedNodes) ||
+        hasAssociationNode(record.removedNodes)
+    )
 }
 
 export function subscribeNativeLabels(

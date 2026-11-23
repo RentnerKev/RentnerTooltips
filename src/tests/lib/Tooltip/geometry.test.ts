@@ -5,7 +5,9 @@ import {
     fixedTooltipOrigin,
     relativeTooltipRect,
     insideHoverHull,
+    tooltipReferenceHidden,
 } from '../../../lib/Tooltip/tooltipGeometry.ts'
+import { mergeTooltipDefaults } from '../../../lib/Tooltip/tooltipDefaults.ts'
 import {
     createTooltipTiming,
     activateTooltip,
@@ -228,4 +230,55 @@ test('reports padded available heights for vertical and horizontal content const
         { side: 'right', collisionPadding: 8 },
     )
     expect(horizontal.availableHeight).toBe(264)
+})
+
+test('tooltipReferenceHidden skips measuring non-clipping ancestors and detects clipping ancestors', () => {
+    let nonClipReads = 0
+    const clippingParent = {
+        parentElement: null,
+        getRootNode: () => ({ nodeType: 9 }),
+        getBoundingClientRect: () => rect(0, 0, 200, 200),
+    }
+    const passthroughParent = {
+        parentElement: clippingParent,
+        getRootNode: () => ({ nodeType: 9 }),
+        getBoundingClientRect: () => {
+            nonClipReads++
+            return rect(0, 0, 800, 600)
+        },
+    }
+    const styles = new WeakMap<
+        object,
+        { overflowX: string; overflowY: string }
+    >([
+        [passthroughParent, { overflowX: 'visible', overflowY: 'visible' }],
+        [clippingParent, { overflowX: 'hidden', overflowY: 'visible' }],
+    ])
+    const trigger = {
+        ownerDocument: {
+            documentElement: { clientWidth: 800, clientHeight: 600 },
+            defaultView: {
+                getComputedStyle: (el: object) => styles.get(el)!,
+            },
+        },
+        parentElement: passthroughParent,
+        getRootNode: () => ({ nodeType: 9 }),
+        getBoundingClientRect: () => rect(50, 50, 40, 20),
+    } as unknown as HTMLElement
+
+    expect(tooltipReferenceHidden(trigger)).toBe(false)
+    expect(nonClipReads).toBe(0)
+    expect(tooltipReferenceHidden(trigger, rect(250, 50, 40, 20))).toBe(true)
+    expect(nonClipReads).toBe(0)
+})
+
+test('mergeTooltipDefaults reuses inherited reference when no overrides are defined', () => {
+    const inherited = Object.freeze({ side: 'top' as const, sideOffset: 8 })
+    expect(mergeTooltipDefaults(inherited)).toBe(inherited)
+    expect(mergeTooltipDefaults(inherited, {})).toBe(inherited)
+    expect(mergeTooltipDefaults(inherited, { side: undefined })).toBe(inherited)
+    const merged = mergeTooltipDefaults(inherited, { sideOffset: 0 })
+    expect(merged).not.toBe(inherited)
+    expect(merged).toEqual({ side: 'top', sideOffset: 0 })
+    expect(inherited).toEqual({ side: 'top', sideOffset: 8 })
 })

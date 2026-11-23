@@ -7,6 +7,7 @@ import {
     tooltipSizeClasses,
 } from '../../../config/tooltip.config.ts'
 import {
+    EMPTY_TOOLTIP_DESIGN,
     TooltipDesignContext,
     TooltipDefaultsContext,
     TooltipClassNamesContext,
@@ -19,73 +20,22 @@ import type {
 
 import { mergeTooltipDefaults } from '../../../lib/Tooltip/tooltipDefaults.ts'
 
-export function useCustomTooltipLogic({
-    open,
-    defaultOpen,
-    onOpenChange,
-    delayDuration,
-    disabled,
-    disableHoverableContent,
-    customDesign,
-    classNames,
-    ...localDefaults
-}: CustomTooltipLogicProps): CustomTooltipLogicResult {
-    const providerDepth = useContext(TooltipProviderDepthContext)
-    const inheritedDesign = useContext(TooltipDesignContext)
-    const inheritedDefaults = useContext(TooltipDefaultsContext)
-    const inheritedClassNames = useContext(TooltipClassNamesContext)
-    const defaults = mergeTooltipDefaults(inheritedDefaults, localDefaults)
-    const slots = mergeTooltipDefaults(inheritedClassNames, classNames)
-    const resolvedDesign = mergeTooltipDefaults(
-        mergeTooltipDefaults(defaultTooltipDesign, inheritedDesign),
-        customDesign,
-    )
-    const hasCustomBase =
-        customDesign?.baseClasses !== undefined ||
-        inheritedDesign.baseClasses !== undefined
-    const sizeClasses =
-        !hasCustomBase || defaults.size !== undefined
-            ? tooltipSizeClasses[defaults.size ?? 'sm']
-            : ''
-    const design = {
-        baseClasses:
-            resolvedDesign.baseClasses ?? defaultTooltipDesign.baseClasses,
-        animationClasses:
-            resolvedDesign.animationClasses ??
-            defaultTooltipDesign.animationClasses,
-        contentClasses:
-            resolvedDesign.contentClasses ??
-            defaultTooltipDesign.contentClasses,
-        arrowClasses:
-            resolvedDesign.arrowClasses ?? defaultTooltipDesign.arrowClasses,
-    }
-    const contentClassName =
-        slots.content ??
-        [design.baseClasses, sizeClasses, design.contentClasses]
-            .filter(Boolean)
-            .join(' ')
-    const animationClassName = slots.animation ?? design.animationClasses
-    const arrowClassName = slots.arrow ?? design.arrowClasses
-    const interaction = useTooltipInteraction({
-        open,
-        defaultOpen,
-        onOpenChange,
-        disabled,
-        delayDuration,
-        disableHoverableContent,
-    })
-    const position = useTooltipPosition(
-        interaction.state.isOpen,
-        interaction.state.triggerNode,
-        interaction.refs.contentRef,
-        interaction.refs.positionerRef,
-        defaults,
-        interaction.state.portalDocument,
-    )
-    const contentStyle: CSSProperties &
-        Record<`--${string}`, string | undefined> = {
+const DEFAULT_CONTENT_CLASSES = {
+    sm: `${defaultTooltipDesign.baseClasses} ${tooltipSizeClasses.sm} ${defaultTooltipDesign.contentClasses}`,
+    md: `${defaultTooltipDesign.baseClasses} ${tooltipSizeClasses.md} ${defaultTooltipDesign.contentClasses}`,
+    lg: `${defaultTooltipDesign.baseClasses} ${tooltipSizeClasses.lg} ${defaultTooltipDesign.contentClasses}`,
+} as const
+
+type TooltipContentStyle = CSSProperties &
+    Record<`--${string}`, string | undefined>
+
+function buildContentStyle(
+    position: ReturnType<typeof useTooltipPosition>,
+    zIndex: number | undefined,
+): TooltipContentStyle {
+    return {
         position: 'relative',
-        zIndex: defaults.portalZIndex,
+        zIndex,
         '--rentner-tooltip-transform-origin': position?.transformOrigin,
         '--rentner-tooltip-content-available-width': position
             ? `${position.availableWidth}px`
@@ -110,19 +60,120 @@ export function useCustomTooltipLogic({
         '--radix-tooltip-trigger-height':
             'var(--rentner-tooltip-trigger-height)',
     }
+}
+
+const CLOSED_CONTENT_STYLE: TooltipContentStyle = Object.freeze(
+    buildContentStyle(null, undefined),
+)
+
+const DEFAULT_CONTENT_BODY_STYLE: CSSProperties = Object.freeze({
+    maxHeight: undefined,
+    overflow: 'hidden',
+})
+
+const UNBOUNDED_CONTENT_BODY_STYLE: CSSProperties = Object.freeze({
+    maxHeight: undefined,
+    overflow: undefined,
+})
+
+export function useCustomTooltipLogic({
+    open,
+    defaultOpen,
+    onOpenChange,
+    delayDuration,
+    disabled,
+    disableHoverableContent,
+    customDesign,
+    classNames,
+    ...localDefaults
+}: CustomTooltipLogicProps): CustomTooltipLogicResult {
+    const providerDepth = useContext(TooltipProviderDepthContext)
+    const inheritedDesign = useContext(TooltipDesignContext)
+    const inheritedDefaults = useContext(TooltipDefaultsContext)
+    const inheritedClassNames = useContext(TooltipClassNamesContext)
+    const defaults = mergeTooltipDefaults(inheritedDefaults, localDefaults)
+    const slots = mergeTooltipDefaults(inheritedClassNames, classNames)
+    const hasDefaultDesignOnly =
+        inheritedDesign === EMPTY_TOOLTIP_DESIGN && !customDesign
+    let design: {
+        baseClasses: string
+        animationClasses: string
+        contentClasses: string
+        arrowClasses: string
+    }
+    let contentClassName: string
+    if (hasDefaultDesignOnly) {
+        design = defaultTooltipDesign
+        contentClassName =
+            slots.content ?? DEFAULT_CONTENT_CLASSES[defaults.size ?? 'sm']
+    } else {
+        const resolvedDesign = mergeTooltipDefaults(
+            mergeTooltipDefaults(defaultTooltipDesign, inheritedDesign),
+            customDesign,
+        )
+        const hasCustomBase =
+            customDesign?.baseClasses !== undefined ||
+            inheritedDesign.baseClasses !== undefined
+        const sizeClasses =
+            !hasCustomBase || defaults.size !== undefined
+                ? tooltipSizeClasses[defaults.size ?? 'sm']
+                : ''
+        design = {
+            baseClasses:
+                resolvedDesign.baseClasses ?? defaultTooltipDesign.baseClasses,
+            animationClasses:
+                resolvedDesign.animationClasses ??
+                defaultTooltipDesign.animationClasses,
+            contentClasses:
+                resolvedDesign.contentClasses ??
+                defaultTooltipDesign.contentClasses,
+            arrowClasses:
+                resolvedDesign.arrowClasses ??
+                defaultTooltipDesign.arrowClasses,
+        }
+        contentClassName =
+            slots.content ??
+            [design.baseClasses, sizeClasses, design.contentClasses]
+                .filter(Boolean)
+                .join(' ')
+    }
+    const animationClassName = slots.animation ?? design.animationClasses
+    const arrowClassName = slots.arrow ?? design.arrowClasses
+    const interaction = useTooltipInteraction({
+        open,
+        defaultOpen,
+        onOpenChange,
+        disabled,
+        delayDuration,
+        disableHoverableContent,
+    })
+    const position = useTooltipPosition(
+        interaction.state.isOpen,
+        interaction.state.triggerNode,
+        interaction.refs.contentRef,
+        interaction.refs.positionerRef,
+        defaults,
+        interaction.state.portalDocument,
+    )
+    const contentStyle =
+        !position && defaults.portalZIndex === undefined
+            ? CLOSED_CONTENT_STYLE
+            : buildContentStyle(position, defaults.portalZIndex)
+    const contentBodyStyle: CSSProperties =
+        defaults.avoidCollisions === false
+            ? UNBOUNDED_CONTENT_BODY_STYLE
+            : position
+              ? {
+                    maxHeight: position.contentMaxHeight,
+                    overflow: 'hidden',
+                }
+              : DEFAULT_CONTENT_BODY_STYLE
     return {
         state: {
             ...interaction.state,
             position,
             contentStyle,
-            contentBodyStyle: {
-                maxHeight:
-                    defaults.avoidCollisions === false
-                        ? undefined
-                        : position?.contentMaxHeight,
-                overflow:
-                    defaults.avoidCollisions === false ? undefined : 'hidden',
-            },
+            contentBodyStyle,
             providerDepth,
             design,
             defaults,

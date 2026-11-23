@@ -39,11 +39,8 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
     const behavior = inherited ?? fallback
     const id = useId()
     const triggerRef = useRef<HTMLElement | null>(null)
+    const trackedTriggerNode = useRef<HTMLElement | null>(null)
     const [triggerNode, setTriggerNode] = useState<HTMLElement | null>(null)
-    const setTriggerRef = useCallback((node: HTMLElement | null) => {
-        triggerRef.current = node
-        setTriggerNode(node)
-    }, [])
     const contentRef = useRef<HTMLDivElement | null>(null)
     const positionerRef = useRef<HTMLDivElement | null>(null)
     const portalDocument = triggerNode?.ownerDocument ?? null
@@ -55,6 +52,7 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
         setInternalOpen(options.defaultOpen ?? false)
     const isOpen = !options.disabled && (options.open ?? internalOpen)
     const current = useRef(options)
+    const inheritedHoverRef = useRef(inheritedHover)
     const requested = useRef(isOpen)
     const timer = useRef<{ view: Window; id: number } | null>(null)
     const settlement = useRef<{
@@ -69,6 +67,7 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
 
     useLayoutEffect(() => {
         current.current = options
+        inheritedHoverRef.current = inheritedHover
         requested.current = isOpen
     })
 
@@ -93,11 +92,18 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
         if (current.current.disabled) return
         if (next === requested.current) return
         requested.current = next
-        if (next) setDelayed(fromDelay)
+        if (next) {
+            setDelayed(fromDelay)
+            if (trackedTriggerNode.current !== triggerRef.current) {
+                trackedTriggerNode.current = triggerRef.current
+                setTriggerNode(triggerRef.current)
+            }
+        }
         if (current.current.open === undefined) setInternalOpen(next)
         current.current.onOpenChange?.(next)
     }, [])
     const clearGrace = useCallback(() => {
+        if (!grace.current) return
         grace.current = null
         behavior.timing.endTransit(id)
     }, [behavior, id])
@@ -107,12 +113,6 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
         clearGrace()
         requestOpen(false)
     }, [clearTimer, cancelSettlement, clearGrace, requestOpen])
-    useLayoutEffect(() => {
-        if (isOpen) return
-        clearTimer()
-        cancelSettlement()
-        clearGrace()
-    }, [isOpen, clearTimer, cancelSettlement, clearGrace])
     const releasePointer = useCallback(function releasePointer() {
         pointerHeld.current = false
         pointerDocument.current?.removeEventListener(
@@ -125,17 +125,38 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
         )
         pointerDocument.current = null
     }, [])
-
+    const setTriggerRef = useCallback(
+        (node: HTMLElement | null) => {
+            const previous = triggerRef.current
+            if (previous !== node) {
+                pointerAttempted.current = false
+                if (previous) {
+                    clearTimer()
+                    cancelSettlement()
+                    releasePointer()
+                    clearGrace()
+                }
+            }
+            triggerRef.current = node
+            if (requested.current || trackedTriggerNode.current !== null) {
+                trackedTriggerNode.current = node
+                setTriggerNode(node)
+            }
+        },
+        [clearTimer, cancelSettlement, releasePointer, clearGrace],
+    )
     useLayoutEffect(() => {
-        pointerAttempted.current = false
-        return () => {
-            if (!triggerNode) return
-            clearTimer()
-            cancelSettlement()
-            releasePointer()
-            clearGrace()
+        if (isOpen) {
+            if (trackedTriggerNode.current !== triggerRef.current) {
+                trackedTriggerNode.current = triggerRef.current
+                setTriggerNode(triggerRef.current)
+            }
+            return
         }
-    }, [triggerNode, clearTimer, cancelSettlement, releasePointer, clearGrace])
+        clearTimer()
+        cancelSettlement()
+        clearGrace()
+    }, [isOpen, clearTimer, cancelSettlement, clearGrace])
 
     useEffect(
         () => () => {
@@ -227,107 +248,128 @@ export function useTooltipInteraction(options: TooltipInteractionOptions) {
         }
     }, [isOpen, close, triggerNode, id, portalDocument, clearGrace])
 
-    function handlePointerMove(event: PointerEvent<HTMLElement>) {
-        if (
-            event.pointerType === 'touch' ||
-            pointerHeld.current ||
-            pointerAttempted.current ||
-            behavior.timing.isInTransit() ||
-            timer.current ||
-            requested.current
-        )
-            return
-        const view = event.currentTarget.ownerDocument.defaultView
-        if (!view) return
-        pointerAttempted.current = true
-        clearGrace()
-        const warm = behavior.skipDelayDuration > 0 && behavior.timing.isWarm()
-        const delay = warm
-            ? 0
-            : (options.delayDuration ?? behavior.delayDuration)
-        if (delay <= 0) requestOpen(true)
-        else
-            timer.current = {
-                view,
-                id: view.setTimeout(() => {
-                    timer.current = null
-                    requestOpen(true, true)
-                }, delay),
-            }
-    }
-    function handleFocus(event: FocusEvent<HTMLElement>) {
-        if (pointerHeld.current) return
-        clearTimer()
-        cancelSettlement()
-        const view = event.currentTarget.ownerDocument.defaultView
-        if (view) {
-            // Focus scrolling can arrive after the opening render. Give it two
-            // quiet frames; deliberate scrolls afterwards retain normal dismissal.
-            const trigger = event.currentTarget
-            const pending = {
-                view,
-                frame: 0,
-                onScroll(scrollEvent: Event) {
-                    if (
-                        isComposedAncestor(
-                            scrollEvent.composedPath()[0] ?? scrollEvent.target,
-                            trigger,
-                        )
-                    )
-                        schedule()
-                },
-            }
-            const schedule = () => {
-                pending.view.cancelAnimationFrame(pending.frame)
-                pending.frame = pending.view.requestAnimationFrame(() => {
-                    pending.frame = pending.view.requestAnimationFrame(() => {
-                        if (settlement.current === pending) cancelSettlement()
-                    })
-                })
-            }
-            settlement.current = pending
-            view.addEventListener('scroll', pending.onScroll, true)
-            schedule()
-        }
-        requestOpen(true)
-    }
-    function handlePointerDown(event: PointerEvent<HTMLElement>) {
-        close()
-        releasePointer()
-        pointerAttempted.current = true
-        pointerHeld.current = true
-        pointerDocument.current = event.currentTarget.ownerDocument
-        pointerDocument.current.addEventListener('pointerup', releasePointer)
-        pointerDocument.current.addEventListener(
-            'pointercancel',
-            releasePointer,
-        )
-    }
-    function handlePointerLeave(event: PointerEvent<HTMLElement>) {
-        pointerAttempted.current = false
-        clearTimer()
-        if (event.pointerType === 'touch') return
-        const target =
-            event.currentTarget === triggerRef.current
-                ? contentRef.current
-                : triggerRef.current
-        if (
-            (options.disableHoverableContent ?? inheritedHover) ||
-            !target ||
-            !requested.current
-        )
-            close()
-        else {
-            grace.current = hoverHull(
-                { x: event.clientX, y: event.clientY },
-                target.getBoundingClientRect(),
+    const handlePointerMove = useCallback(
+        (event: PointerEvent<HTMLElement>) => {
+            if (
+                event.pointerType === 'touch' ||
+                pointerHeld.current ||
+                pointerAttempted.current ||
+                behavior.timing.isInTransit() ||
+                timer.current ||
+                requested.current
             )
-            behavior.timing.beginTransit(id)
-        }
-    }
-    function handleContentEnter() {
+                return
+            const view = event.currentTarget.ownerDocument.defaultView
+            if (!view) return
+            pointerAttempted.current = true
+            clearGrace()
+            const warm =
+                behavior.skipDelayDuration > 0 && behavior.timing.isWarm()
+            const delay = warm
+                ? 0
+                : (current.current.delayDuration ?? behavior.delayDuration)
+            if (delay <= 0) requestOpen(true)
+            else
+                timer.current = {
+                    view,
+                    id: view.setTimeout(() => {
+                        timer.current = null
+                        requestOpen(true, true)
+                    }, delay),
+                }
+        },
+        [behavior, clearGrace, requestOpen],
+    )
+    const handleFocus = useCallback(
+        (event: FocusEvent<HTMLElement>) => {
+            if (pointerHeld.current) return
+            clearTimer()
+            cancelSettlement()
+            const view = event.currentTarget.ownerDocument.defaultView
+            if (view) {
+                // Focus scrolling can arrive after the opening render. Give it two
+                // quiet frames; deliberate scrolls afterwards retain normal dismissal.
+                const trigger = event.currentTarget
+                const pending = {
+                    view,
+                    frame: 0,
+                    onScroll(scrollEvent: Event) {
+                        if (
+                            isComposedAncestor(
+                                scrollEvent.composedPath()[0] ??
+                                    scrollEvent.target,
+                                trigger,
+                            )
+                        )
+                            schedule()
+                    },
+                }
+                const schedule = () => {
+                    pending.view.cancelAnimationFrame(pending.frame)
+                    pending.frame = pending.view.requestAnimationFrame(() => {
+                        pending.frame = pending.view.requestAnimationFrame(
+                            () => {
+                                if (settlement.current === pending)
+                                    cancelSettlement()
+                            },
+                        )
+                    })
+                }
+                settlement.current = pending
+                view.addEventListener('scroll', pending.onScroll, true)
+                schedule()
+            }
+            requestOpen(true)
+        },
+        [clearTimer, cancelSettlement, requestOpen],
+    )
+    const handlePointerDown = useCallback(
+        (event: PointerEvent<HTMLElement>) => {
+            close()
+            releasePointer()
+            pointerAttempted.current = true
+            pointerHeld.current = true
+            pointerDocument.current = event.currentTarget.ownerDocument
+            pointerDocument.current.addEventListener(
+                'pointerup',
+                releasePointer,
+            )
+            pointerDocument.current.addEventListener(
+                'pointercancel',
+                releasePointer,
+            )
+        },
+        [close, releasePointer],
+    )
+    const handlePointerLeave = useCallback(
+        (event: PointerEvent<HTMLElement>) => {
+            pointerAttempted.current = false
+            clearTimer()
+            if (event.pointerType === 'touch') return
+            const target =
+                event.currentTarget === triggerRef.current
+                    ? contentRef.current
+                    : triggerRef.current
+            if (
+                (current.current.disableHoverableContent ??
+                    inheritedHoverRef.current) ||
+                !target ||
+                !requested.current
+            )
+                close()
+            else {
+                grace.current = hoverHull(
+                    { x: event.clientX, y: event.clientY },
+                    target.getBoundingClientRect(),
+                )
+                behavior.timing.beginTransit(id)
+            }
+        },
+        [behavior, clearTimer, close, id],
+    )
+    const handleContentEnter = useCallback(() => {
         clearGrace()
-    }
+    }, [clearGrace])
     return {
         state: {
             triggerNode,
